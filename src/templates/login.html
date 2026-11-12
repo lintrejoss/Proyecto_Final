@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Ingreso al Sistema</h2>
+      <p class="text-muted">Gestión de Préstamos de Herramientas y Equipos</p>
+    </div>
+
+    <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="email">Correo Institucional</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          class="form-control" 
+          placeholder="usuario@universidad.edu.co" 
+          required 
+          autocomplete="username"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          class="form-control" 
+          placeholder="••••••••" 
+          required 
+          autocomplete="current-password"
+        >
+      </div>
+
+      <button type="submit" id="btn-submit" class="btn btn-primary btn-block">
+        Ingresar al Sistema
+      </button>
+    </form>
+
+    <div class="demo-accounts-section">
+      <div class="divider"><span>Acceso Rápido para Demostración</span></div>
+      <p class="demo-instruction text-muted">Haz clic en un perfil para cargar credenciales de prueba:</p>
+      
+      <div class="demo-buttons-grid">
+        <button type="button" class="btn-demo" onclick="fillCredentials('estudiante@universidad.edu.co', 'Estudiante123!')">
+          <span class="demo-role">Estudiante</span>
+          <span class="demo-user">Laura Méndez</span>
+        </button>
+
+        <button type="button" class="btn-demo" onclick="fillCredentials('docente@universidad.edu.co', 'Docente123!')">
+          <span class="demo-role">Docente</span>
+          <span class="demo-user">Prof. Carlos Ruiz</span>
+        </button>
+
+        <button type="button" class="btn-demo" onclick="fillCredentials('responsable@universidad.edu.co', 'Responsable123!')">
+          <span class="demo-role">Responsable</span>
+          <span class="demo-user">Marta Gómez (Laboratorio)</span>
+        </button>
+
+        <button type="button" class="btn-demo" onclick="fillCredentials('coordinacion@universidad.edu.co', 'Coordinacion123!')">
+          <span class="demo-role">Coordinación</span>
+          <span class="demo-user">Dr. Fernando Ospina</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function fillCredentials(email, password) {
+  document.getElementById('email').value = email;
+  document.getElementById('password').value = password;
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-submit');
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  btn.disabled = true;
+  btn.innerText = 'Verificando credenciales...';
+
+  try {
+    const res = await fetch('/api/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Error al iniciar sesión');
+    }
+
+    // Almacenar token en localStorage para peticiones fetch
+    localStorage.setItem('auth_token', data.access_token);
+    localStorage.setItem('user_profile', JSON.stringify(data.user));
+
+    showAlert('Autenticación exitosa. Redirigiendo...', 'success');
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 400);
+
+  } catch (err) {
+    showAlert(err.message, 'danger');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Ingresar al Sistema';
+  }
+}
+</script>
+{% endblock %}
+

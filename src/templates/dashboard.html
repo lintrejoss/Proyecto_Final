@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Principal{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+  <div class="welcome-box">
+    <h1>Bienvenido, {{ user.nombre_completo }}</h1>
+    <p class="text-muted">Documento: <strong>{{ user.documento }}</strong> | Rol actual: <span class="badge-inline role-{{ user.rol.value }}">{{ user.rol.value | capitalize }}</span></p>
+  </div>
+  <div class="system-status-indicator">
+    <span class="status-dot"></span>
+    <span>Sistema Operativo Conectado</span>
+  </div>
+</div>
+
+<!-- Grid de Módulos según Rol -->
+<div class="modules-grid">
+
+  <!-- MÓDULO: CATÁLOGO Y DISPONIBILIDAD (Visible para todos) -->
+  <div class="module-card">
+    <div class="module-icon">🔍</div>
+    <h3>Catálogo y Disponibilidad</h3>
+    <p>Consulte herramientas y equipos en tiempo real. Verifique disponibilidad por rangos de fecha y condición operativa.</p>
+    <a href="/catalogo" class="btn btn-primary btn-sm disabled-link" id="link-catalogo">Próxima Etapa (Etapa 2)</a>
+  </div>
+
+  <!-- MÓDULO: SOLICITUDES (Estudiantes y Docentes) -->
+  {% if user.rol.value in ['estudiante', 'docente'] %}
+  <div class="module-card">
+    <div class="module-icon">📋</div>
+    <h3>Mis Solicitudes</h3>
+    <p>Revise el estado de sus solicitudes (pendiente de docente, en revisión de responsable, aprobadas o rechazadas).</p>
+    <a href="/solicitudes" class="btn btn-outline btn-sm disabled-link" id="link-solicitudes">Próxima Etapa (Etapa 2)</a>
+  </div>
+  {% endif %}
+
+  <!-- MÓDULO: BANDEJA DOCENTE (Solo Docentes) -->
+  {% if user.rol.value == 'docente' %}
+  <div class="module-card highlight-card">
+    <div class="module-icon">👨‍🏫</div>
+    <h3>Bandeja de Aval Docente</h3>
+    <p>Revise y emita visto bueno preliminar a las solicitudes académicas radicadas por estudiantes a su cargo.</p>
+    <a href="/docente/bandeja" class="btn btn-primary btn-sm disabled-link" id="link-docente">Próxima Etapa (Etapa 3)</a>
+  </div>
+  {% endif %}
+
+  <!-- MÓDULO: BANDEJA RESPONSABLE (Solo Responsables de Laboratorio) -->
+  {% if user.rol.value == 'responsable' %}
+  <div class="module-card highlight-card">
+    <div class="module-icon">🛡️</div>
+    <h3>Evaluación de Responsable</h3>
+    <p>Atención por orden estricto de llegada (FIFO), resolución de colisiones y aprobación de reservas firmes.</p>
+    <a href="/responsable/bandeja" class="btn btn-primary btn-sm disabled-link" id="link-eval-responsable">Próxima Etapa (Etapa 3)</a>
+  </div>
+
+  <div class="module-card">
+    <div class="module-icon">📦</div>
+    <h3>Entregas y Devoluciones</h3>
+    <p>Gestión de entregas físicas con validación de préstamos vencidos, recepción con registro de estado y novedades.</p>
+    <a href="/prestamos/gestion" class="btn btn-primary btn-sm disabled-link" id="link-prestamos">Próxima Etapa (Etapa 4)</a>
+  </div>
+
+  <div class="module-card">
+    <div class="module-icon">⚠️</div>
+    <h3>Novedades e Inhabilitaciones</h3>
+    <p>Seguimiento a recursos dañados o faltantes y gestión de rehabilitación de usuarios sancionados.</p>
+    <a href="/novedades/gestion" class="btn btn-primary btn-sm disabled-link" id="link-novedades">Próxima Etapa (Etapa 4)</a>
+  </div>
+
+  <div class="module-card">
+    <div class="module-icon">⚙️</div>
+    <h3>Gestión de Recursos</h3>
+    <p>Alta, edición y actualización de la condición física (habilitado, no disponible, dado de baja) de herramientas y equipos.</p>
+    <a href="/recursos/admin" class="btn btn-primary btn-sm disabled-link" id="link-recursos">Próxima Etapa (Etapa 2)</a>
+  </div>
+  {% endif %}
+
+  <!-- MÓDULO: COORDINACIÓN Y AUDITORÍA (Coordinación y Responsable) -->
+  {% if user.rol.value in ['coordinacion', 'responsable'] %}
+  <div class="module-card">
+    <div class="module-icon">📊</div>
+    <h3>Consulta Consolidada</h3>
+    <p>Información histórica consolidada de préstamos, trazabilidad de solicitudes, eventos de auditoría y métricas de uso.</p>
+    <a href="/reportes/consolidado" class="btn btn-primary btn-sm disabled-link" id="link-reportes">Próxima Etapa (Etapa 5)</a>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Sección informativa sobre las reglas aplicadas en el Backend -->
+<div class="info-section">
+  <h3>Reglas y Políticas de Negocio Activas en el Servidor</h3>
+  <div class="rules-summary-grid">
+    <div class="rule-box">
+      <strong>🕒 Fechas Libres (Sin límite 24h)</strong>
+      <p>Confirmado por el profesor. Se permiten reservas con fechas futuras cumpliendo únicamente <code>inicio &lt; fin</code>.</p>
+    </div>
+    <div class="rule-box">
+      <strong>🎓 Aval Docente Obligatorio</strong>
+      <p>Las solicitudes de estudiantes no llegan a la bandeja del responsable sin visto bueno previo del docente.</p>
+    </div>
+    <div class="rule-box">
+      <strong>🔢 Orden Estricto (FIFO)</strong>
+      <p>No se permite aprobar solicitudes posteriores si existe una previa pendiente que compita por los mismos recursos.</p>
+    </div>
+    <div class="rule-box">
+      <strong>🚫 Bloqueo por Mora y Daño</strong>
+      <p>Préstamos vencidos impiden nuevas entregas. Novedades abiertas por daño o faltante inhabilitan al solicitante.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
