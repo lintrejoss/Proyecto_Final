@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Sistema de Préstamos{% endblock %} - Gestión Universitaria</title>
+  <title>{% block title %}Sistema de Préstamos{% endblock %} — Gestión Universitaria</title>
+  
+  <!-- Tipografías de alta gama para MK.books (Serif editorial + Sans minimalista) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
@@ -11,8 +17,11 @@
     <div class="header-container">
       <div class="brand">
         <a href="/" class="brand-link">
-          <span class="brand-icon">🛠️</span>
-          <span class="brand-title">Préstamos Universitarios</span>
+          <span class="brand-monogram">MK</span>
+          <div class="brand-text">
+            <span class="brand-title">MK.books</span>
+            <span class="brand-subtitle">SISTEMA UNIVERSITARIO DE HERRAMIENTAS & EQUIPOS</span>
+          </div>
         </a>
       </div>
       <nav class="nav-links">
@@ -22,13 +31,19 @@
           {% if user.rol.value in ['estudiante', 'docente'] %}
             <a href="/solicitudes" class="nav-item">Mis Solicitudes</a>
           {% endif %}
+          {% if user.rol.value == 'docente' %}
+            <a href="/docente/bandeja" class="nav-item">Avales Docentes</a>
+          {% endif %}
+          {% if user.rol.value == 'responsable' %}
+            <a href="/responsable/bandeja" class="nav-item">Aprobaciones FIFO</a>
+          {% endif %}
           <div class="user-info">
             <span class="user-name">{{ user.nombre_completo }}</span>
             <span class="role-badge role-{{ user.rol.value }}">{{ user.rol.value | capitalize }}</span>
           </div>
-          <a href="/logout" class="btn btn-outline btn-sm">Cerrar Sesión</a>
+          <a href="/logout" class="btn btn-sy-outline btn-sm">Cerrar Sesión</a>
         {% else %}
-          <a href="/login" class="btn btn-primary btn-sm">Iniciar Sesión</a>
+          <a href="/login" class="btn btn-sy-gold btn-sm">Iniciar Sesión</a>
         {% endif %}
       </nav>
     </div>
@@ -45,7 +60,8 @@
 
   <footer class="app-footer">
     <div class="container footer-content">
-      <p>&copy; 2026 Sistema de Préstamos de Herramientas y Equipos - Proyecto Universitario</p>
+      <div class="footer-brand">MK.books</div>
+      <p>&copy; 2026 MK.books &bull; Sistema de Préstamos de Herramientas y Equipos</p>
       <p class="text-muted">Horario oficial: America/Bogota (UTC-5)</p>
     </div>
   </footer>

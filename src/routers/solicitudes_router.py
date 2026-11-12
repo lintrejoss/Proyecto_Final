@@ -4,13 +4,46 @@ from sqlalchemy.orm import Session
 from src.database import get_db
 from src.models.usuario import Usuario, RolUsuario
 from src.models.solicitud import Solicitud, EstadoSolicitud
-from src.schemas.solicitud import SolicitudCreate, SolicitudCancelar, SolicitudOut
-from src.auth.dependencies import get_current_user
+from src.schemas.solicitud import (
+    SolicitudCreate, SolicitudCancelar, SolicitudOut,
+    EvaluacionDocenteRequest, EvaluacionResponsableRequest,
+    SolicitudBandejaResponsableOut
+)
+from src.auth.dependencies import get_current_user, require_roles
 from src.services.solicitud_service import (
     crear_solicitud, cancelar_solicitud, listar_solicitudes, formatear_solicitud_out
 )
+from src.services.evaluacion_service import (
+    evaluar_docente, evaluar_responsable,
+    listar_bandeja_docente, listar_bandeja_responsable
+)
 
 router = APIRouter(prefix="/api/v1/solicitudes", tags=["Solicitudes"])
+
+
+@router.get("/bandeja/docente", response_model=List[SolicitudOut])
+def get_bandeja_docente(
+    db: Session = Depends(get_db),
+    docente: Usuario = Depends(require_roles(RolUsuario.DOCENTE))
+):
+    """
+    Retorna la bandeja de solicitudes de estudiantes en espera de visto bueno docente.
+    Restringido al rol Docente.
+    """
+    return listar_bandeja_docente(db, docente)
+
+
+@router.get("/bandeja/responsable", response_model=List[SolicitudBandejaResponsableOut])
+def get_bandeja_responsable(
+    db: Session = Depends(get_db),
+    responsable: Usuario = Depends(require_roles(RolUsuario.RESPONSABLE))
+):
+    """
+    Retorna la bandeja de solicitudes en espera de aprobación del responsable,
+    con diagnósticos en tiempo real de colisión y prioridad de orden FIFO.
+    Restringido al rol Responsable.
+    """
+    return listar_bandeja_responsable(db, responsable)
 
 
 @router.post("", response_model=SolicitudOut, status_code=status.HTTP_201_CREATED)
@@ -77,4 +110,44 @@ def post_cancelar_solicitud(
     Si la solicitud estaba aprobada, libera automáticamente la reserva.
     """
     return cancelar_solicitud(db, solicitud_id, current_user, datos.motivo_cancelacion)
+
+
+@router.post("/{solicitud_id}/evaluar-docente", response_model=SolicitudOut)
+def post_evaluar_docente(
+    solicitud_id: int,
+    datos: EvaluacionDocenteRequest,
+    db: Session = Depends(get_db),
+    docente: Usuario = Depends(require_roles(RolUsuario.DOCENTE))
+):
+    """
+    Emite el visto bueno académico (o rechazo) de un docente sobre una solicitud de estudiante.
+    """
+    return evaluar_docente(
+        db=db,
+        solicitud_id=solicitud_id,
+        docente=docente,
+        aprobado=datos.aprobado,
+        motivo_rechazo=datos.motivo_rechazo
+    )
+
+
+@router.post("/{solicitud_id}/evaluar-responsable", response_model=SolicitudOut)
+def post_evaluar_responsable(
+    solicitud_id: int,
+    datos: EvaluacionResponsableRequest,
+    db: Session = Depends(get_db),
+    responsable: Usuario = Depends(require_roles(RolUsuario.RESPONSABLE))
+):
+    """
+    Aprueba definitivamente (creando reserva firme) o rechaza una solicitud.
+    Aplica bloqueo pesimista ordenado de filas (SELECT ... FOR UPDATE) y valida regla FIFO.
+    """
+    return evaluar_responsable(
+        db=db,
+        solicitud_id=solicitud_id,
+        responsable=responsable,
+        aprobado=datos.aprobado,
+        motivo_rechazo=datos.motivo_rechazo
+    )
+
 

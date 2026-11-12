@@ -40,13 +40,24 @@ Este documento registra los casos de prueba del **Sistema de Préstamos de Herra
 
 ---
 
-## 3. Pruebas Planificadas para Etapas Posteriores
+## 3. Pruebas de la Etapa 3: Evaluación Docente, Aprobación de Responsable y Orden FIFO
 
-- **TC-16 (Etapa 3)**: Visto bueno de docente a solicitud de estudiante (`pendiente_docente` -> `pendiente_responsable`).
-- **TC-17 (Etapa 3)**: Bloqueo de aprobación por solicitud previa pendiente (FIFO estricto).
-- **TC-18 (Etapa 3)**: Bloqueo pesimista `FOR UPDATE` en orden estable para reservas concurrentes.
-- **TC-19 (Etapa 4)**: Entrega física bloqueada por usuario con préstamo vencido.
-- **TC-20 (Etapa 4)**: Devolución con daño/faltante genera novedad e inhabilitación.
-- **TC-21 (Etapa 4)**: Devolución exitosa libera disponibilidad inmediata y preserva reservas futuras.
-- **TC-22 (Etapa 5)**: Consulta consolidada de coordinación con auditoría completa.
+| ID Prueba | Requisito | Descripción | Precondiciones | Datos de Entrada | Resultado Esperado | Estado | Código HTTP |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TC-16** | RN-02, RF-05 | Visto bueno docente a solicitud | Solicitud en `pendiente_docente` | POST `/evaluar-docente` con `aprobado: true` | Pasa a `pendiente_responsable` y registra docente evaluador | **PASÓ** | 200 OK |
+| **TC-17** | RN-02, RF-05 | Rechazo docente con motivo | Solicitud en `pendiente_docente` | POST `/evaluar-docente` con `aprobado: false` y motivo | Pasa a `rechazada` con motivo registrado | **PASÓ** | 200 OK |
+| **TC-18** | RN-04, RF-06 | Aprobación de responsable y reserva | Solicitud en `pendiente_responsable` | POST `/evaluar-responsable` con `aprobado: true` | Pasa a `aprobada`, crea reserva firme y actualiza disponibilidad | **PASÓ** | 200 OK |
+| **TC-19** | RN-05, RNF-03 | Bloqueo por orden de llegada (FIFO) | Solicitud 1 y 2 compiten por recursos | Intento de aprobar Solicitud 2 (posterior) | HTTP 422 Unprocessable Entity indicando prioridad de Solicitud 1 | **PASÓ** | 422 Unprocessable |
+| **TC-20** | RN-05, RF-06 | Desbloqueo FIFO tras rechazo previo | Solicitud 1 rechazada por docente | Aprobación de Solicitud 2 (posterior) | Aprobación exitosa (HTTP 200) tras desaparecer el bloqueo | **PASÓ** | 200 OK |
+| **TC-21** | DEC-006, RNF-03 | Bloqueo por condición no disponible | Recurso marcado `no_disponible` | Intento de aprobación por responsable | HTTP 409 Conflict impidiendo reservar equipo dañado | **PASÓ** | 409 Conflict |
+
+---
+
+## 4. Pruebas Planificadas para Etapas Posteriores
+
+- **TC-22 (Etapa 4)**: Entrega física bloqueada si el solicitante tiene un préstamo vencido (RN-06).
+- **TC-23 (Etapa 4)**: Devolución con daño/faltante genera novedad automática e inhabilita a la persona (RN-07).
+- **TC-24 (Etapa 4)**: Devolución a tiempo libera recursos para uso inmediato y conserva reservas futuras.
+- **TC-25 (Etapa 4)**: Resolución de novedad y rehabilitación condicionada (RN-08).
+- **TC-26 (Etapa 5)**: Consulta consolidada de coordinación con auditoría completa (CA-06, RF-12).
 

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Bandeja de Aval Docente{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <span class="eyebrow-tag">Supervisión Académica &bull; Rol Docente</span>
+    <h2>Bandeja de Aval Docente</h2>
+    <p class="text-muted">Revise las solicitudes académicas radicadas por estudiantes y otorgue visto bueno para remitirlas al responsable.</p>
+  </div>
+  <div>
+    <button type="button" class="btn btn-outline" onclick="cargarBandejaDocente()">🔄 Actualizar</button>
+  </div>
+</div>
+
+<div class="info-section mb-3 py-2">
+  <p class="small text-muted mb-0">
+    💡 <strong>Regla RN-02 (Profesor):</strong> Toda solicitud de un estudiante debe contar con visto bueno docente antes de que el responsable de laboratorio pueda evaluar y crear reservas firmes.
+  </p>
+</div>
+
+<div id="loading-spinner" class="text-center py-4" style="display: none;">
+  <p class="text-muted">Cargando solicitudes estudiantiles...</p>
+</div>
+
+<div id="bandeja-container" class="solicitudes-list">
+  <!-- Renderizado dinámico -->
+</div>
+
+<div id="empty-state" class="empty-state" style="display: none;">
+  <p>🎉 ¡Al día! No tienes solicitudes estudiantiles pendientes de visto bueno.</p>
+</div>
+
+<!-- MODAL DE RECHAZO DOCENTE -->
+<div id="modal-rechazo" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Rechazar Solicitud Estudiantil #<span id="rechazo-solicitud-id"></span></h3>
+      <button type="button" class="modal-close" onclick="cerrarModalRechazo()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-rechazo-alert"></div>
+      <p class="text-muted">
+        El rechazo en esta etapa descarta la solicitud e informa al estudiante el motivo pedagógico o administrativo.
+      </p>
+      <form id="form-rechazo" onsubmit="confirmarRechazo(event)">
+        <div class="form-group">
+          <label for="motivo-rechazo">Motivo de Rechazo *</label>
+          <textarea id="motivo-rechazo" class="form-control" rows="3" placeholder="Explique las razones académicas del rechazo..." required minlength="5"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="cerrarModalRechazo()">Volver</button>
+          <button type="submit" id="btn-confirmar-rechazo" class="btn btn-danger">Confirmar Rechazo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let solicitudARechazarId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  cargarBandejaDocente();
+});
+
+async function cargarBandejaDocente() {
+  const spinner = document.getElementById('loading-spinner');
+  const container = document.getElementById('bandeja-container');
+  const empty = document.getElementById('empty-state');
+
+  spinner.style.display = 'block';
+  container.innerHTML = '';
+  empty.style.display = 'none';
+
+  try {
+    const solicitudes = await fetchAPI('/api/v1/solicitudes/bandeja/docente');
+    spinner.style.display = 'none';
+
+    if (solicitudes.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    renderizarBandeja(solicitudes);
+  } catch (err) {
+    spinner.style.display = 'none';
+    showAlert('Error al cargar solicitudes: ' + err.message, 'danger');
+  }
+}
+
+function renderizarBandeja(solicitudes) {
+  const container = document.getElementById('bandeja-container');
+  container.innerHTML = '';
+
+  solicitudes.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'solicitud-card';
+
+    const recursosList = s.recursos.map(r => `
+      <span class="recurso-tag"><strong>[${r.codigo}]</strong> ${r.nombre} (${r.categoria})</span>
+    `).join(' ');
+
+    card.innerHTML = `
+      <div class="solicitud-header">
+        <div>
+          <span class="solicitud-num">Solicitud #${s.id}</span>
+          <span class="text-muted small ml-2">Radicada el ${formatBogotaDate(s.creado_en)}</span>
+        </div>
+        <span class="status-badge badge-warning">EN ESPERA DE AVAL DOCENTE</span>
+      </div>
+
+      <div class="solicitud-body">
+        <div class="solicitante-banner mb-2">
+          <span>Estudiante: <strong>${s.solicitante.nombre_completo}</strong> (${s.solicitante.email})</span>
+          <span class="small text-muted">Doc: ${s.solicitante.documento}</span>
+        </div>
+
+        <div class="mb-2">
+          <strong>Período Solicitado:</strong>
+          <span class="fecha-rango">📅 ${formatBogotaDate(s.fecha_inicio)} &nbsp;➔&nbsp; ${formatBogotaDate(s.fecha_fin)}</span>
+        </div>
+
+        <div class="mb-2">
+          <strong>Recursos requeridos (${s.recursos.length}):</strong>
+          <div class="recursos-tags-container mt-1">${recursosList}</div>
+        </div>
+
+        <div class="mb-2">
+          <strong>Justificación Académica del Estudiante:</strong>
+          <p class="text-muted mb-0">${s.motivo}</p>
+        </div>
+      </div>
+
+      <div class="solicitud-footer" style="justify-content: flex-end; gap: 0.75rem;">
+        <button type="button" class="btn btn-outline text-danger btn-sm" onclick="abrirModalRechazo(${s.id})">
+          ✕ Rechazar Solicitud
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="otorgarVistoBueno(${s.id})">
+          ✓ Otorgar Visto Bueno
+        </button>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+async function otorgarVistoBueno(solicitudId) {
+  if (!confirm(`¿Confirma otorgar Visto Bueno académico a la Solicitud #${solicitudId}? Pasará a revisión del responsable de laboratorio.`)) {
+    return;
+  }
+
+  try {
+    await fetchAPI(`/api/v1/solicitudes/${solicitudId}/evaluar-docente`, {
+      method: 'POST',
+      body: JSON.stringify({ aprobado: true })
+    });
+
+    showAlert(`✓ Visto bueno otorgado a Solicitud #${solicitudId}. Ha sido remitida al Responsable.`, 'success');
+    cargarBandejaDocente();
+  } catch (err) {
+    showAlert(err.message, 'danger');
+  }
+}
+
+function abrirModalRechazo(solicitudId) {
+  solicitudARechazarId = solicitudId;
+  document.getElementById('rechazo-solicitud-id').innerText = solicitudId;
+  document.getElementById('motivo-rechazo').value = '';
+  document.getElementById('modal-rechazo-alert').innerHTML = '';
+  document.getElementById('modal-rechazo').style.display = 'flex';
+}
+
+function cerrarModalRechazo() {
+  document.getElementById('modal-rechazo').style.display = 'none';
+  solicitudARechazarId = null;
+}
+
+async function confirmarRechazo(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-confirmar-rechazo');
+  const alertContainer = document.getElementById('modal-rechazo-alert');
+  alertContainer.innerHTML = '';
+
+  const motivo = document.getElementById('motivo-rechazo').value.trim();
+  btn.disabled = true;
+  btn.innerText = 'Rechazando...';
+
+  try {
+    await fetchAPI(`/api/v1/solicitudes/${solicitudARechazarId}/evaluar-docente`, {
+      method: 'POST',
+      body: JSON.stringify({ aprobado: false, motivo_rechazo: motivo })
+    });
+
+    cerrarModalRechazo();
+    showAlert(`Solicitud #${solicitudARechazarId} rechazada con éxito.`, 'info');
+    cargarBandejaDocente();
+  } catch (err) {
+    alertContainer.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Confirmar Rechazo';
+  }
+}
+</script>
+{% endblock %}
+

@@ -26,8 +26,15 @@ def seed_database():
             {
                 "email": "estudiante@universidad.edu.co",
                 "password": "Estudiante123!",
-                "nombre_completo": "Laura Méndez",
+                "nombre_completo": "Paulina Trejos",
                 "documento": "EST-2026-001",
+                "rol": RolUsuario.ESTUDIANTE
+            },
+            {
+                "email": "estudiante2@universidad.edu.co",
+                "password": "Estudiante2123!",
+                "nombre_completo": "Ronald Cardona",
+                "documento": "EST-2026-002",
                 "rol": RolUsuario.ESTUDIANTE
             },
             {

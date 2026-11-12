@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Bandeja de Aprobación de Responsable{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <span class="eyebrow-tag">Control de Inventario &bull; Aprobaciones Firmes</span>
+    <h2>Bandeja de Evaluación de Responsable</h2>
+    <p class="text-muted">Gestión de solicitudes en orden de llegada (FIFO), resolución de colisiones y creación de reservas firmes.</p>
+  </div>
+  <div>
+    <button type="button" class="btn btn-outline" onclick="cargarBandejaResponsable()">🔄 Actualizar</button>
+  </div>
+</div>
+
+<div class="info-section mb-3 py-2">
+  <div class="rules-summary-grid">
+    <div class="rule-box">
+      <strong>🔢 Orden Estricto (RN-05 - Profesor)</strong>
+      <p>No se permite aprobar una solicitud si existe otra anterior pendiente con recursos o fechas superpuestas.</p>
+    </div>
+    <div class="rule-box">
+      <strong>🔒 Bloqueo Pesimista (Concurrencia)</strong>
+      <p>El backend bloquea los recursos en orden estable (<code>FOR UPDATE</code>) asegurando integridad transaccional.</p>
+    </div>
+  </div>
+</div>
+
+<div id="loading-spinner" class="text-center py-4" style="display: none;">
+  <p class="text-muted">Analizando cola FIFO y reservas concurrentes...</p>
+</div>
+
+<div id="bandeja-container" class="solicitudes-list">
+  <!-- Renderizado dinámicamente -->
+</div>
+
+<div id="empty-state" class="empty-state" style="display: none;">
+  <p>🎉 No hay solicitudes pendientes de evaluación en este momento.</p>
+</div>
+
+<!-- MODAL DE RECHAZO RESPONSABLE -->
+<div id="modal-rechazo" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Rechazar Solicitud #<span id="rechazo-solicitud-id"></span></h3>
+      <button type="button" class="modal-close" onclick="cerrarModalRechazo()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-rechazo-alert"></div>
+      <p class="text-muted">
+        Indique el motivo técnico, logístico o de inventario por el cual se rechaza definitivamente la solicitud.
+      </p>
+      <form id="form-rechazo" onsubmit="confirmarRechazo(event)">
+        <div class="form-group">
+          <label for="motivo-rechazo">Motivo de Rechazo *</label>
+          <textarea id="motivo-rechazo" class="form-control" rows="3" placeholder="Explique las razones del rechazo..." required minlength="5"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="cerrarModalRechazo()">Volver</button>
+          <button type="submit" id="btn-confirmar-rechazo" class="btn btn-danger">Confirmar Rechazo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let solicitudARechazarId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  cargarBandejaResponsable();
+});
+
+async function cargarBandejaResponsable() {
+  const spinner = document.getElementById('loading-spinner');
+  const container = document.getElementById('bandeja-container');
+  const empty = document.getElementById('empty-state');
+
+  spinner.style.display = 'block';
+  container.innerHTML = '';
+  empty.style.display = 'none';
+
+  try {
+    const solicitudes = await fetchAPI('/api/v1/solicitudes/bandeja/responsable');
+    spinner.style.display = 'none';
+
+    if (solicitudes.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    renderizarBandeja(solicitudes);
+  } catch (err) {
+    spinner.style.display = 'none';
+    showAlert('Error al cargar bandeja del responsable: ' + err.message, 'danger');
+  }
+}
+
+function renderizarBandeja(solicitudes) {
+  const container = document.getElementById('bandeja-container');
+  container.innerHTML = '';
+
+  solicitudes.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'solicitud-card';
+
+    const recursosList = s.recursos.map(r => `
+      <span class="recurso-tag"><strong>[${r.codigo}]</strong> ${r.nombre} (${r.condicion})</span>
+    `).join(' ');
+
+    let diagnosticoFIFO = '';
+    let btnAprobarHabilitado = true;
+    let mensajeBoton = '✓ Aprobar y Consolidar Reserva';
+
+    if (s.bloqueada_por_fifo) {
+      diagnosticoFIFO = `
+        <div class="alert alert-warning mb-2 py-2" style="font-size:0.85rem;">
+          ⚠️ <strong>En espera por orden de llegada (FIFO):</strong><br>
+          ${s.motivo_bloqueo_fifo}
+        </div>
+      `;
+      btnAprobarHabilitado = false;
+      mensajeBoton = 'Bloqueado por Solicitud Previa';
+    } else if (s.conflicto_reserva_existente) {
+      diagnosticoFIFO = `
+        <div class="alert alert-danger mb-2 py-2" style="font-size:0.85rem;">
+          🚫 <strong>Conflicto con Reserva Aprobada:</strong><br>
+          ${s.motivo_conflicto_reserva}
+        </div>
+      `;
+      btnAprobarHabilitado = false;
+      mensajeBoton = 'Conflicto de Reserva';
+    } else {
+      diagnosticoFIFO = `
+        <div class="alert alert-success mb-2 py-1" style="font-size:0.85rem;">
+          ✓ Turno prioritario válido. Sin colisiones detectadas con solicitudes anteriores ni reservas firmes.
+        </div>
+      `;
+    }
+
+    let avalDocenteInfo = '';
+    if (s.docente_evaluo) {
+      avalDocenteInfo = `
+        <div class="small text-muted mb-2">
+          👨‍🏫 <strong>Aval Docente Otorgado por:</strong> ${s.docente_evaluo.nombre_completo} el ${formatBogotaDate(s.fecha_evaluacion_docente)}
+        </div>
+      `;
+    } else if (s.solicitante.rol === 'docente') {
+      avalDocenteInfo = `
+        <div class="small text-muted mb-2">
+          👨‍🏫 <strong>Solicitud originada directamente por docente</strong> (no requiere visto bueno previo).
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="solicitud-header">
+        <div>
+          <span class="solicitud-num">Solicitud #${s.id}</span>
+          <span class="text-muted small ml-2">Turno FIFO: Radicada el ${formatBogotaDate(s.creado_en)}</span>
+        </div>
+        <span class="status-badge badge-info">EN REVISIÓN DE RESPONSABLE</span>
+      </div>
+
+      <div class="solicitud-body">
+        <div class="solicitante-banner mb-2">
+          <span>Solicitante: <strong>${s.solicitante.nombre_completo}</strong> (${s.solicitante.email})</span>
+          <span class="badge-inline role-${s.solicitante.rol}">${s.solicitante.rol}</span>
+        </div>
+
+        ${avalDocenteInfo}
+
+        <div class="mb-2">
+          <strong>Período Solicitado:</strong>
+          <span class="fecha-rango">📅 ${formatBogotaDate(s.fecha_inicio)} &nbsp;➔&nbsp; ${formatBogotaDate(s.fecha_fin)}</span>
+        </div>
+
+        <div class="mb-2">
+          <strong>Recursos a reservar (${s.recursos.length}):</strong>
+          <div class="recursos-tags-container mt-1">${recursosList}</div>
+        </div>
+
+        <div class="mb-2">
+          <strong>Justificación Académica:</strong>
+          <p class="text-muted mb-1">${s.motivo}</p>
+        </div>
+
+        ${diagnosticoFIFO}
+      </div>
+
+      <div class="solicitud-footer" style="justify-content: flex-end; gap: 0.75rem;">
+        <button type="button" class="btn btn-outline text-danger btn-sm" onclick="abrirModalRechazo(${s.id})">
+          ✕ Rechazar Solicitud
+        </button>
+        <button type="button" class="btn btn-primary btn-sm ${!btnAprobarHabilitado ? 'disabled-link' : ''}" 
+                ${!btnAprobarHabilitado ? 'disabled' : ''} 
+                onclick="aprobarSolicitud(${s.id})">
+          ${mensajeBoton}
+        </button>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+async function aprobarSolicitud(solicitudId) {
+  if (!confirm(`¿Confirma aprobar la Solicitud #${solicitudId}? Se consolidará la reserva firme sobre todos los recursos solicitados.`)) {
+    return;
+  }
+
+  try {
+    await fetchAPI(`/api/v1/solicitudes/${solicitudId}/evaluar-responsable`, {
+      method: 'POST',
+      body: JSON.stringify({ aprobado: true })
+    });
+
+    showAlert(`✓ ¡Solicitud #${solicitudId} aprobada exitosamente! Reserva firme consolidada en base de datos.`, 'success');
+    cargarBandejaResponsable();
+  } catch (err) {
+    showAlert(err.message, 'danger');
+  }
+}
+
+function abrirModalRechazo(solicitudId) {
+  solicitudARechazarId = solicitudId;
+  document.getElementById('rechazo-solicitud-id').innerText = solicitudId;
+  document.getElementById('motivo-rechazo').value = '';
+  document.getElementById('modal-rechazo-alert').innerHTML = '';
+  document.getElementById('modal-rechazo').style.display = 'flex';
+}
+
+function cerrarModalRechazo() {
+  document.getElementById('modal-rechazo').style.display = 'none';
+  solicitudARechazarId = null;
+}
+
+async function confirmarRechazo(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-confirmar-rechazo');
+  const alertContainer = document.getElementById('modal-rechazo-alert');
+  alertContainer.innerHTML = '';
+
+  const motivo = document.getElementById('motivo-rechazo').value.trim();
+  btn.disabled = true;
+  btn.innerText = 'Rechazando...';
+
+  try {
+    await fetchAPI(`/api/v1/solicitudes/${solicitudARechazarId}/evaluar-responsable`, {
+      method: 'POST',
+      body: JSON.stringify({ aprobado: false, motivo_rechazo: motivo })
+    });
+
+    cerrarModalRechazo();
+    showAlert(`Solicitud #${solicitudARechazarId} rechazada con éxito.`, 'info');
+    cargarBandejaResponsable();
+  } catch (err) {
+    alertContainer.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Confirmar Rechazo';
+  }
+}
+</script>
+{% endblock %}
+

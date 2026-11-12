@@ -17,6 +17,16 @@ class SolicitudCancelar(BaseModel):
     motivo_cancelacion: str = Field(..., min_length=5, description="Motivo obligatorio por el cual se cancela la solicitud")
 
 
+class EvaluacionDocenteRequest(BaseModel):
+    aprobado: bool = Field(..., description="True para otorgar visto bueno, False para rechazar")
+    motivo_rechazo: Optional[str] = Field(None, description="Motivo obligatorio si es rechazada")
+
+
+class EvaluacionResponsableRequest(BaseModel):
+    aprobado: bool = Field(..., description="True para aprobar y crear reserva firme, False para rechazar")
+    motivo_rechazo: Optional[str] = Field(None, description="Motivo obligatorio si es rechazada")
+
+
 class SolicitudOut(BaseModel):
     id: int
     solicitante_id: int
@@ -38,4 +48,13 @@ class SolicitudOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SolicitudBandejaResponsableOut(SolicitudOut):
+    bloqueada_por_fifo: bool = False
+    solicitud_bloqueante_id: Optional[int] = None
+    motivo_bloqueo_fifo: Optional[str] = None
+    conflicto_reserva_existente: bool = False
+    motivo_conflicto_reserva: Optional[str] = None
+
 

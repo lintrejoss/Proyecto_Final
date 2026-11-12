@@ -57,6 +57,26 @@ def solicitudes_page(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("solicitudes.html", {"request": request, "user": user})
 
 
+@router.get("/docente/bandeja", response_class=HTMLResponse)
+def docente_bandeja_page(request: Request, db: Session = Depends(get_db)):
+    user = get_optional_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    if user.rol.value != "docente":
+        return RedirectResponse(url="/", status_code=302)
+    return templates.TemplateResponse("docente_bandeja.html", {"request": request, "user": user})
+
+
+@router.get("/responsable/bandeja", response_class=HTMLResponse)
+def responsable_bandeja_page(request: Request, db: Session = Depends(get_db)):
+    user = get_optional_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    if user.rol.value != "responsable":
+        return RedirectResponse(url="/", status_code=302)
+    return templates.TemplateResponse("responsable_bandeja.html", {"request": request, "user": user})
+
+
 @router.get("/logout", response_class=HTMLResponse)
 def logout_view(request: Request):
     response = RedirectResponse(url="/login", status_code=302)

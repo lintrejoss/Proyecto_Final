@@ -5,6 +5,7 @@
 {% block content %}
 <div class="dashboard-header">
   <div class="welcome-box">
+    <span class="eyebrow-tag">Panel de Control &bull; Sesión Autorizada</span>
     <h1>Bienvenido, {{ user.nombre_completo }}</h1>
     <p class="text-muted">Documento: <strong>{{ user.documento }}</strong> | Rol actual: <span class="badge-inline role-{{ user.rol.value }}">{{ user.rol.value | capitalize }}</span></p>
   </div>
@@ -41,7 +42,7 @@
     <div class="module-icon">👨‍🏫</div>
     <h3>Bandeja de Aval Docente</h3>
     <p>Revise y emita visto bueno preliminar a las solicitudes académicas radicadas por estudiantes a su cargo.</p>
-    <a href="/docente/bandeja" class="btn btn-primary btn-sm disabled-link" id="link-docente">Próxima Etapa (Etapa 3)</a>
+    <a href="/docente/bandeja" class="btn btn-primary btn-sm" id="link-docente">Evaluar Solicitudes Estudiantiles →</a>
   </div>
   {% endif %}
 
@@ -51,7 +52,7 @@
     <div class="module-icon">🛡️</div>
     <h3>Evaluación de Responsable</h3>
     <p>Atención por orden estricto de llegada (FIFO), resolución de colisiones y aprobación de reservas firmes.</p>
-    <a href="/responsable/bandeja" class="btn btn-primary btn-sm disabled-link" id="link-eval-responsable">Próxima Etapa (Etapa 3)</a>
+    <a href="/responsable/bandeja" class="btn btn-primary btn-sm" id="link-eval-responsable">Gestionar Aprobaciones (FIFO) →</a>
   </div>
 
   <div class="module-card">

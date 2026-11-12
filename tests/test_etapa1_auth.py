@@ -62,7 +62,7 @@ def test_me_con_token_valido():
     assert res_me.status_code == 200
     data = res_me.json()
     assert data["email"] == "estudiante@universidad.edu.co"
-    assert data["nombre_completo"] == "Laura Méndez"
+    assert data["nombre_completo"] == "Paulina Trejos"
     assert "password" not in data
     assert "password_hash" not in data
 
@@ -93,7 +93,7 @@ def test_vistas_web_login_y_redireccion():
     )
     res_dash = auth_client.get("/")
     assert res_dash.status_code == 200
-    assert "Laura Méndez" in res_dash.text
+    assert "Paulina Trejos" in res_dash.text
     assert "Estudiante" in res_dash.text
 
 
