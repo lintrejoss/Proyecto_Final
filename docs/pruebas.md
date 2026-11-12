@@ -53,11 +53,19 @@ Este documento registra los casos de prueba del **Sistema de Préstamos de Herra
 
 ---
 
-## 4. Pruebas Planificadas para Etapas Posteriores
+## 4. Pruebas de la Etapa 4: Entrega Física, Préstamos Vencidos, Devolución y Novedades
 
-- **TC-22 (Etapa 4)**: Entrega física bloqueada si el solicitante tiene un préstamo vencido (RN-06).
-- **TC-23 (Etapa 4)**: Devolución con daño/faltante genera novedad automática e inhabilita a la persona (RN-07).
-- **TC-24 (Etapa 4)**: Devolución a tiempo libera recursos para uso inmediato y conserva reservas futuras.
-- **TC-25 (Etapa 4)**: Resolución de novedad y rehabilitación condicionada (RN-08).
-- **TC-26 (Etapa 5)**: Consulta consolidada de coordinación con auditoría completa (CA-06, RF-12).
+| ID Prueba | Requisito | Descripción | Precondiciones | Datos de Entrada | Resultado Esperado | Estado | Código HTTP |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TC-22** | CA-04, RF-07 | Entrega física de solicitud aprobada | Solicitud en `aprobada`, recursos operativos | POST `/api/v1/prestamos/entregar` con `solicitud_id` | HTTP 201, crea `Prestamo` en estado `en_curso` y audita evento | **PASÓ** | 201 Created |
+| **TC-23** | RN-06, RF-07 | Bloqueo de entrega por préstamo vencido | Usuario tiene préstamo con `fecha_fin < ahora` sin devolver | Intento de entrega física de nueva solicitud | HTTP 422 Unprocessable Entity indicando sanción de mora [RN-06] | **PASÓ** | 422 Unprocessable |
+| **TC-24** | CA-05, RF-08 | Devolución conforme sin novedades | Préstamo en curso | POST `/api/v1/prestamos/{id}/devolver` con ítems en buen estado | HTTP 200, préstamo `devuelto`, recursos permanecen `habilitado` | **PASÓ** | 200 OK |
+| **TC-25** | RN-07, RF-08 | Devolución con daño e inhabilitación | Préstamo en curso | POST `/api/v1/prestamos/{id}/devolver` con daño en recurso | HTTP 200, crea `Novedad`, recurso `no_disponible`, usuario inhabilitado (403 en solicitudes) | **PASÓ** | 200 OK |
+| **TC-26** | RN-08, RF-09 | Resolución de novedad y rehabilitación | Novedad abierta sobre usuario | POST `/api/v1/novedades/{id}/resolver` con acuerdo y rehabilitación | HTTP 200, novedad resuelta, recurso `habilitado`, usuario puede solicitar nuevamente | **PASÓ** | 200 OK |
+
+---
+
+## 5. Pruebas Planificadas para Etapas Posteriores
+
+- **TC-27 (Etapa 5)**: Consulta consolidada de coordinación con auditoría completa (CA-06, RF-12).
 

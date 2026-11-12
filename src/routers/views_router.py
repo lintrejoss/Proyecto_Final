@@ -77,6 +77,34 @@ def responsable_bandeja_page(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("responsable_bandeja.html", {"request": request, "user": user})
 
 
+@router.get("/responsable/prestamos", response_class=HTMLResponse)
+def responsable_prestamos_page(request: Request, db: Session = Depends(get_db)):
+    user = get_optional_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    if user.rol.value not in ["responsable", "coordinacion"]:
+        return RedirectResponse(url="/", status_code=302)
+    return templates.TemplateResponse("prestamos_gestion.html", {"request": request, "user": user})
+
+
+@router.get("/responsable/novedades", response_class=HTMLResponse)
+def responsable_novedades_page(request: Request, db: Session = Depends(get_db)):
+    user = get_optional_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    if user.rol.value not in ["responsable", "coordinacion"]:
+        return RedirectResponse(url="/", status_code=302)
+    return templates.TemplateResponse("novedades_gestion.html", {"request": request, "user": user})
+
+
+@router.get("/mis-prestamos", response_class=HTMLResponse)
+def mis_prestamos_page(request: Request, db: Session = Depends(get_db)):
+    user = get_optional_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("mis_prestamos.html", {"request": request, "user": user})
+
+
 @router.get("/logout", response_class=HTMLResponse)
 def logout_view(request: Request):
     response = RedirectResponse(url="/login", status_code=302)

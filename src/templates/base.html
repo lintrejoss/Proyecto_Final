@@ -30,12 +30,19 @@
           <a href="/catalogo" class="nav-item">Catálogo</a>
           {% if user.rol.value in ['estudiante', 'docente'] %}
             <a href="/solicitudes" class="nav-item">Mis Solicitudes</a>
+            <a href="/mis-prestamos" class="nav-item">Mis Préstamos</a>
           {% endif %}
           {% if user.rol.value == 'docente' %}
             <a href="/docente/bandeja" class="nav-item">Avales Docentes</a>
           {% endif %}
           {% if user.rol.value == 'responsable' %}
             <a href="/responsable/bandeja" class="nav-item">Aprobaciones FIFO</a>
+            <a href="/responsable/prestamos" class="nav-item">Entregas & Préstamos</a>
+            <a href="/responsable/novedades" class="nav-item">Novedades</a>
+          {% endif %}
+          {% if user.rol.value == 'coordinacion' %}
+            <a href="/responsable/prestamos" class="nav-item">Préstamos & Vencidos</a>
+            <a href="/responsable/novedades" class="nav-item">Novedades</a>
           {% endif %}
           <div class="user-info">
             <span class="user-name">{{ user.nombre_completo }}</span>

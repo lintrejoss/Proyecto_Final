@@ -1,0 +1,545 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Entregas y Devoluciones — MK.books{% endblock %}
+
+{% block content %}
+<div class="header-section mb-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <span class="badge badge-gold mb-2">RESPONSABLE DE LABORATORIO</span>
+      <h1 class="page-title">Gestión de Préstamos & Entregas</h1>
+      <p class="text-muted">
+        Formalización de entregas físicas, monitoreo en tiempo real de préstamos en mora [RN-06] y registro de devoluciones.
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline btn-sm" onclick="cargarTodo()">🔄 Actualizar Datos</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs de Navegación Operativa -->
+<div class="tabs-nav mb-4">
+  <button class="tab-btn active" onclick="switchTab('entregas')" id="tab-btn-entregas">
+    📋 Listas para Entrega <span class="badge-count" id="count-entregas">0</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('activos')" id="tab-btn-activos">
+    ⏳ Préstamos en Curso & Vencidos <span class="badge-count" id="count-activos">0</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('historial')" id="tab-btn-historial">
+    📦 Historial Devueltos
+  </button>
+</div>
+
+<!-- SECCIÓN 1: SOLICITUDES LISTAS PARA ENTREGA FÍSICA -->
+<div id="seccion-entregas" class="tab-content active">
+  <div class="card p-4">
+    <h3 class="mb-3">Solicitudes Aprobadas Pendientes de Entrega</h3>
+    <p class="text-muted text-sm mb-4">
+      Estas solicitudes cuentan con aprobación firme y reserva de recursos. Al hacer clic en <strong>"Entregar Equipos"</strong> el sistema validará automáticamente que el estudiante no tenga préstamos vencidos ni sanciones abiertas antes de despachar.
+    </p>
+
+    <div id="loading-entregas" class="text-center py-4 text-muted">Cargando solicitudes listas para despacho...</div>
+
+    <div class="table-responsive" id="tabla-entregas-wrapper" style="display: none;">
+      <table class="table-editorial">
+        <thead>
+          <tr>
+            <th>ID / Fecha</th>
+            <th>Solicitante</th>
+            <th>Recursos Reservados</th>
+            <th>Período Pactado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-entregas">
+          <!-- Renderizado dinámico -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN 2: PRÉSTAMOS EN CURSO Y VENCIDOS -->
+<div id="seccion-activos" class="tab-content" style="display: none;">
+  <div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h3>Préstamos Activos en Laboratorio</h3>
+        <p class="text-muted text-sm">Monitoreo de equipos en poder de estudiantes y docentes.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <label class="d-flex align-items-center gap-2 text-sm text-muted">
+          <input type="checkbox" id="filtro-solo-vencidos" onchange="cargarPrestamos()">
+          <span>Mostrar solo vencidos [RN-06]</span>
+        </label>
+      </div>
+    </div>
+
+    <div id="loading-activos" class="text-center py-4 text-muted">Cargando préstamos activos...</div>
+
+    <div class="table-responsive" id="tabla-activos-wrapper" style="display: none;">
+      <table class="table-editorial">
+        <thead>
+          <tr>
+            <th>Préstamo #</th>
+            <th>Solicitante</th>
+            <th>Recursos Entregados</th>
+            <th>Entrega Real</th>
+            <th>Límite de Devolución</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-activos">
+          <!-- Renderizado dinámico -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN 3: HISTORIAL DE PRÉSTAMOS DEVUELTOS -->
+<div id="seccion-historial" class="tab-content" style="display: none;">
+  <div class="card p-4">
+    <h3 class="mb-3">Historial de Préstamos Finalizados</h3>
+    <p class="text-muted text-sm mb-4">Registro histórico de retornos recibidos en laboratorio.</p>
+
+    <div id="loading-historial" class="text-center py-4 text-muted">Cargando historial de devoluciones...</div>
+
+    <div class="table-responsive" id="tabla-historial-wrapper" style="display: none;">
+      <table class="table-editorial">
+        <thead>
+          <tr>
+            <th>Préstamo #</th>
+            <th>Solicitante</th>
+            <th>Recursos</th>
+            <th>Entrega</th>
+            <th>Devolución Real</th>
+            <th>Recepción por</th>
+            <th>Observaciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-historial">
+          <!-- Renderizado dinámico -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: REGISTRAR ENTREGA FÍSICA -->
+<div id="modal-entrega" class="modal-overlay" style="display: none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Confirmar Entrega Física de Recursos</h3>
+      <button class="modal-close" onclick="cerrarModalEntrega()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-entrega-info" class="p-3 bg-card-accent mb-3 rounded"></div>
+      <div id="modal-entrega-alerta" class="alert alert-danger mb-3" style="display: none;"></div>
+
+      <div class="form-group mb-3">
+        <label for="entrega-obs">Observaciones al Momento de Entrega (Opcional):</label>
+        <textarea id="entrega-obs" class="form-control" rows="3" placeholder="Estado estético, accesorios entregados, etc."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModalEntrega()">Cancelar</button>
+      <button class="btn btn-gold" id="btn-confirmar-entrega" onclick="confirmarEntrega()">Confirmar Entrega Física</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: REGISTRAR DEVOLUCIÓN -->
+<div id="modal-devolucion" class="modal-overlay" style="display: none;">
+  <div class="modal-card modal-lg">
+    <div class="modal-header">
+      <h3>Recepción y Devolución de Equipos</h3>
+      <button class="modal-close" onclick="cerrarModalDevolucion()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-devolucion-info" class="p-3 bg-card-accent mb-3 rounded"></div>
+
+      <h4 class="text-sm text-gold mb-2">Evaluación Individual de Recursos [RN-07]:</h4>
+      <p class="text-xs text-muted mb-3">
+        Si algún recurso presenta daño o faltante, el sistema generará una <strong>Novedad</strong> inmediata, colocará el recurso como <strong>No Disponible</strong> e <strong>inhabilitará al usuario</strong> para futuros préstamos hasta que se resuelva el caso.
+      </p>
+
+      <div id="modal-devolucion-items" class="mb-3">
+        <!-- Renderizado dinámico de recursos para evaluar estado -->
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="devolucion-obs">Observaciones Generales de Recepción:</label>
+        <textarea id="devolucion-obs" class="form-control" rows="2" placeholder="Observaciones generales de la entrega..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModalDevolucion()">Cancelar</button>
+      <button class="btn btn-gold" id="btn-confirmar-devolucion" onclick="confirmarDevolucion()">Registrar Devolución</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let solicitudSeleccionadaEntrega = null;
+let prestamoSeleccionadoDevolucion = null;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+
+  if (tab === 'entregas') {
+    document.getElementById('tab-btn-entregas').classList.add('active');
+    document.getElementById('seccion-entregas').style.display = 'block';
+  } else if (tab === 'activos') {
+    document.getElementById('tab-btn-activos').classList.add('active');
+    document.getElementById('seccion-activos').style.display = 'block';
+  } else if (tab === 'historial') {
+    document.getElementById('tab-btn-historial').classList.add('active');
+    document.getElementById('seccion-historial').style.display = 'block';
+  }
+}
+
+async function cargarTodo() {
+  await Promise.all([cargarEntregas(), cargarPrestamos()]);
+}
+
+async function cargarEntregas() {
+  const loading = document.getElementById('loading-entregas');
+  const wrapper = document.getElementById('tabla-entregas-wrapper');
+  const tbody = document.getElementById('tbody-entregas');
+  const countBadge = document.getElementById('count-entregas');
+
+  loading.style.display = 'block';
+  wrapper.style.display = 'none';
+  tbody.innerHTML = '';
+
+  try {
+    const res = await fetch('/api/v1/prestamos/listas-para-entrega');
+    if (!res.ok) throw new Error("Error al obtener solicitudes listas");
+    const solicitudes = await res.json();
+
+    countBadge.textContent = solicitudes.length;
+    loading.style.display = 'none';
+
+    if (solicitudes.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No hay solicitudes aprobadas esperando entrega física en este momento.</td></tr>`;
+      wrapper.style.display = 'block';
+      return;
+    }
+
+    solicitudes.forEach(s => {
+      const recursosHtml = s.recursos.map(r => `<span class="badge badge-outline mr-1">${r.codigo}: ${r.nombre}</span>`).join(' ');
+      const fInicio = new Date(s.fecha_inicio).toLocaleString('es-CO');
+      const fFin = new Date(s.fecha_fin).toLocaleString('es-CO');
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>#${s.id}</strong><br><span class="text-xs text-muted">${new Date(s.creado_en).toLocaleDateString('es-CO')}</span></td>
+        <td>
+          <strong>${s.usuario_nombre}</strong><br>
+          <span class="text-xs text-muted">${s.usuario_documento} (${s.usuario_rol})</span>
+        </td>
+        <td>${recursosHtml}</td>
+        <td><span class="text-xs">Desde: ${fInicio}<br>Hasta: ${fFin}</span></td>
+        <td>
+          <button class="btn btn-gold btn-sm" onclick='abrirModalEntrega(${JSON.stringify(s)})'>
+            📦 Entregar Equipos
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    wrapper.style.display = 'block';
+  } catch (err) {
+    loading.innerHTML = `<span class="text-danger">Error: ${err.message}</span>`;
+  }
+}
+
+async function cargarPrestamos() {
+  const loadingActivos = document.getElementById('loading-activos');
+  const wrapperActivos = document.getElementById('tabla-activos-wrapper');
+  const tbodyActivos = document.getElementById('tbody-activos');
+  const countActivos = document.getElementById('count-activos');
+
+  const loadingHistorial = document.getElementById('loading-historial');
+  const wrapperHistorial = document.getElementById('tabla-historial-wrapper');
+  const tbodyHistorial = document.getElementById('tbody-historial');
+
+  const soloVencidos = document.getElementById('filtro-solo-vencidos').checked;
+
+  loadingActivos.style.display = 'block';
+  wrapperActivos.style.display = 'none';
+  tbodyActivos.innerHTML = '';
+
+  loadingHistorial.style.display = 'block';
+  wrapperHistorial.style.display = 'none';
+  tbodyHistorial.innerHTML = '';
+
+  try {
+    const res = await fetch(`/api/v1/prestamos${soloVencidos ? '?solo_vencidos=true' : ''}`);
+    if (!res.ok) throw new Error("Error al obtener préstamos");
+    const prestamos = await res.json();
+
+    const activos = prestamos.filter(p => p.estado === 'en_curso');
+    const devueltos = prestamos.filter(p => p.estado === 'devuelto');
+
+    countActivos.textContent = activos.length;
+
+    // Render Activos
+    loadingActivos.style.display = 'none';
+    if (activos.length === 0) {
+      tbodyActivos.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No hay préstamos activos con los filtros seleccionados.</td></tr>`;
+    } else {
+      activos.forEach(p => {
+        const recursosHtml = p.recursos.map(r => `<span class="badge badge-outline mr-1">${r.codigo}</span>`).join(' ');
+        const fEntrega = new Date(p.fecha_entrega_real).toLocaleString('es-CO');
+        const fFin = new Date(p.fecha_fin_prevista).toLocaleString('es-CO');
+
+        let badgeEstado = '<span class="badge badge-success">En Curso</span>';
+        if (p.es_vencido) {
+          badgeEstado = '<span class="badge badge-danger">⚠️ ¡VENCIDO!</span>';
+        }
+
+        const tr = document.createElement('tr');
+        if (p.es_vencido) {
+          tr.style.backgroundColor = 'rgba(239, 68, 68, 0.08)';
+        }
+        tr.innerHTML = `
+          <td><strong>#${p.id}</strong> (Sol #${p.solicitud_id})</td>
+          <td>
+            <strong>${p.solicitante_nombre}</strong><br>
+            <span class="text-xs text-muted">${p.solicitante_documento}</span>
+          </td>
+          <td>${recursosHtml}</td>
+          <td><span class="text-xs">${fEntrega}</span></td>
+          <td><span class="text-xs font-bold ${p.es_vencido ? 'text-danger' : ''}">${fFin}</span></td>
+          <td>${badgeEstado}</td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick='abrirModalDevolucion(${JSON.stringify(p)})'>
+              📥 Recibir Devolución
+            </button>
+          </td>
+        `;
+        tbodyActivos.appendChild(tr);
+      });
+    }
+    wrapperActivos.style.display = 'block';
+
+    // Render Historial
+    loadingHistorial.style.display = 'none';
+    if (devueltos.length === 0) {
+      tbodyHistorial.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No hay préstamos devueltos en el historial.</td></tr>`;
+    } else {
+      devueltos.forEach(p => {
+        const recursosHtml = p.recursos.map(r => `<span class="badge badge-outline mr-1">${r.codigo}</span>`).join(' ');
+        const fEntrega = new Date(p.fecha_entrega_real).toLocaleDateString('es-CO');
+        const fDev = p.fecha_devolucion_real ? new Date(p.fecha_devolucion_real).toLocaleString('es-CO') : 'N/A';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>#${p.id}</strong></td>
+          <td>${p.solicitante_nombre}</td>
+          <td>${recursosHtml}</td>
+          <td><span class="text-xs">${fEntrega}</span></td>
+          <td><span class="text-xs">${fDev}</span></td>
+          <td><span class="text-xs">${p.responsable_recepcion_nombre || 'N/A'}</span></td>
+          <td><span class="text-xs text-muted">${p.observaciones_devolucion || 'Sin novedades'}</span></td>
+        `;
+        tbodyHistorial.appendChild(tr);
+      });
+    }
+    wrapperHistorial.style.display = 'block';
+
+  } catch (err) {
+    loadingActivos.innerHTML = `<span class="text-danger">Error: ${err.message}</span>`;
+    loadingHistorial.innerHTML = `<span class="text-danger">Error: ${err.message}</span>`;
+  }
+}
+
+async function abrirModalEntrega(solicitud) {
+  solicitudSeleccionadaEntrega = solicitud;
+  const info = document.getElementById('modal-entrega-info');
+  const alerta = document.getElementById('modal-entrega-alerta');
+  const btn = document.getElementById('btn-confirmar-entrega');
+
+  alerta.style.display = 'none';
+  btn.disabled = false;
+
+  info.innerHTML = `
+    <strong>Solicitud #${solicitud.id}</strong><br>
+    <strong>Solicitante:</strong> ${solicitud.usuario_nombre} (${solicitud.usuario_documento})<br>
+    <strong>Recursos:</strong> ${solicitud.recursos.map(r => `[${r.codigo}] ${r.nombre}`).join(', ')}<br>
+    <strong>Período:</strong> ${new Date(solicitud.fecha_inicio).toLocaleString('es-CO')} hasta ${new Date(solicitud.fecha_fin).toLocaleString('es-CO')}
+  `;
+
+  // Verificar preventivamente si el usuario tiene sanciones o vencidos
+  try {
+    const res = await fetch(`/api/v1/prestamos/verificar-usuario/${solicitud.usuario_id}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (!data.puede_recibir) {
+        alerta.innerHTML = `<strong>⚠️ BLOQUEO DE ENTREGA:</strong> ${data.motivo_bloqueo}`;
+        alerta.style.display = 'block';
+        btn.disabled = true;
+      }
+    }
+  } catch (e) {
+    console.warn("No se pudo verificar el usuario preventivamente:", e);
+  }
+
+  document.getElementById('modal-entrega').style.display = 'flex';
+}
+
+function cerrarModalEntrega() {
+  document.getElementById('modal-entrega').style.display = 'none';
+  solicitudSeleccionadaEntrega = null;
+  document.getElementById('entrega-obs').value = '';
+}
+
+async function confirmarEntrega() {
+  if (!solicitudSeleccionadaEntrega) return;
+  const btn = document.getElementById('btn-confirmar-entrega');
+  const obs = document.getElementById('entrega-obs').value.trim();
+
+  btn.disabled = true;
+  btn.textContent = 'Registrando...';
+
+  try {
+    const res = await fetch('/api/v1/prestamos/entregar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        solicitud_id: solicitudSeleccionadaEntrega.id,
+        observaciones: obs || null
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || "Error al registrar entrega");
+    }
+
+    cerrarModalEntrega();
+    showAlert(`Entrega física registrada exitosamente para el préstamo #${data.id}.`, 'success');
+    await cargarTodo();
+    switchTab('activos');
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+    btn.disabled = false;
+    btn.textContent = 'Confirmar Entrega Física';
+  }
+}
+
+function abrirModalDevolucion(prestamo) {
+  prestamoSeleccionadoDevolucion = prestamo;
+  const info = document.getElementById('modal-devolucion-info');
+  const itemsContainer = document.getElementById('modal-devolucion-items');
+
+  info.innerHTML = `
+    <strong>Préstamo #${prestamo.id} (Solicitud #${prestamo.solicitud_id})</strong><br>
+    <strong>Solicitante:</strong> ${prestamo.solicitante_nombre} (${prestamo.solicitante_documento})<br>
+    <strong>Fecha Entrega:</strong> ${new Date(prestamo.fecha_entrega_real).toLocaleString('es-CO')}<br>
+    <strong>Fecha Límite Prevista:</strong> ${new Date(prestamo.fecha_fin_prevista).toLocaleString('es-CO')}
+  `;
+
+  itemsContainer.innerHTML = '';
+  prestamo.recursos.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'p-3 mb-2 rounded bg-card border border-subtle';
+    div.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>[${r.codigo}] ${r.nombre}</strong>
+        <select class="form-control select-estado-item" data-recurso-id="${r.id}" onchange="toggleDetalleNovedad(${r.id}, this.value)" style="width: auto;">
+          <option value="bueno">✅ En Buen Estado</option>
+          <option value="dano">⚠️ Daño Físico / Falla</option>
+          <option value="faltante">❌ Faltante / No devuelto</option>
+        </select>
+      </div>
+      <div id="detalle-novedad-${r.id}" style="display: none;" class="mt-2">
+        <input type="text" class="form-control input-desc-novedad" placeholder="Describa el daño o pieza faltante..." id="desc-novedad-${r.id}">
+      </div>
+    `;
+    itemsContainer.appendChild(div);
+  });
+
+  document.getElementById('modal-devolucion').style.display = 'flex';
+}
+
+function toggleDetalleNovedad(recursoId, valor) {
+  const div = document.getElementById(`detalle-novedad-${recursoId}`);
+  if (valor === 'dano' || valor === 'faltante') {
+    div.style.display = 'block';
+  } else {
+    div.style.display = 'none';
+  }
+}
+
+function cerrarModalDevolucion() {
+  document.getElementById('modal-devolucion').style.display = 'none';
+  prestamoSeleccionadoDevolucion = null;
+  document.getElementById('devolucion-obs').value = '';
+}
+
+async function confirmarDevolucion() {
+  if (!prestamoSeleccionadoDevolucion) return;
+  const btn = document.getElementById('btn-confirmar-devolucion');
+  const obs = document.getElementById('devolucion-obs').value.trim();
+
+  // Recolectar estados individuales de cada recurso
+  const items = [];
+  const selects = document.querySelectorAll('.select-estado-item');
+  for (const sel of selects) {
+    const recId = parseInt(sel.getAttribute('data-recurso-id'));
+    const estado = sel.value;
+    const descInput = document.getElementById(`desc-novedad-${recId}`);
+    const desc = descInput ? descInput.value.trim() : null;
+
+    if ((estado === 'dano' || estado === 'faltante') && !desc) {
+      alert("Por favor ingrese una breve descripción para los recursos reportados con daño o faltante.");
+      return;
+    }
+
+    items.push({
+      recurso_id: recId,
+      estado_fisico: estado,
+      descripcion_novedad: desc || null
+    });
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Procesando Devolución...';
+
+  try {
+    const res = await fetch(`/api/v1/prestamos/${prestamoSeleccionadoDevolucion.id}/devolver`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        observaciones: obs || null,
+        items: items
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || "Error al registrar devolución");
+    }
+
+    cerrarModalDevolucion();
+    showAlert(`Devolución del préstamo #${data.id} registrada correctamente.`, 'success');
+    await cargarTodo();
+    switchTab('historial');
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+    btn.disabled = false;
+    btn.textContent = 'Registrar Devolución';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  cargarTodo();
+});
+</script>
+{% endblock %}
