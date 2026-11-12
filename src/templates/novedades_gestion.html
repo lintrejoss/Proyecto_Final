@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Novedades & Sanciones — MK.books{% endblock %}
+
+{% block content %}
+<div class="header-section mb-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <span class="badge badge-gold mb-2">RESPONSABLE & COORDINACIÓN</span>
+      <h1 class="page-title">Novedades & Sanciones</h1>
+      <p class="text-muted">
+        Seguimiento a recursos averiados o extraviados [RN-07] y gestión de acuerdos para rehabilitación de usuarios [RN-08].
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline btn-sm" onclick="cargarNovedades()">🔄 Actualizar</button>
+    </div>
+  </div>
+</div>
+
+<div class="card p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h3>Registro Institucional de Novedades</h3>
+      <p class="text-muted text-sm">
+        Un usuario con novedades no resueltas de daño o faltante permanece <strong>inhabilitado</strong> para radicar y recibir préstamos.
+      </p>
+    </div>
+    <div>
+      <label class="d-flex align-items-center gap-2 text-sm text-muted">
+        <input type="checkbox" id="filtro-solo-abiertas" checked onchange="cargarNovedades()">
+        <span>Mostrar solo novedades abiertas (inhabilitantes)</span>
+      </label>
+    </div>
+  </div>
+
+  <div id="loading-novedades" class="text-center py-4 text-muted">Cargando novedades...</div>
+
+  <div class="table-responsive" id="tabla-novedades-wrapper" style="display: none;">
+    <table class="table-editorial">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tipo</th>
+          <th>Recurso Afectado</th>
+          <th>Usuario Sancionado</th>
+          <th>Descripción del Caso</th>
+          <th>Estado</th>
+          <th>Resolución</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-novedades">
+        <!-- Renderizado dinámico -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL: RESOLVER NOVEDAD -->
+<div id="modal-resolver" class="modal-overlay" style="display: none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Resolver Novedad & Rehabilitar</h3>
+      <button class="modal-close" onclick="cerrarModalResolver()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-resolver-info" class="p-3 bg-card-accent mb-3 rounded"></div>
+
+      <div class="form-group mb-3">
+        <label for="resolucion-obs">Detalle de la Solución / Acuerdo / Reparación (Obligatorio) [RN-08]:</label>
+        <textarea id="resolucion-obs" class="form-control" rows="3" placeholder="Ej: El estudiante pagó el repuesto / el equipo fue calibrado por servicio técnico..."></textarea>
+      </div>
+
+      <div class="form-group mb-3">
+        <label class="d-flex align-items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="rehabilitar-recurso-check" checked>
+          <span><strong>Rehabilitar recurso físico:</strong> Cambiar condición de <code>no_disponible</code> a <code>habilitado</code> para nuevos préstamos.</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModalResolver()">Cancelar</button>
+      <button class="btn btn-gold" id="btn-confirmar-resolucion" onclick="confirmarResolucion()">Resolver Caso & Rehabilitar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let novedadSeleccionada = null;
+
+async function cargarNovedades() {
+  const loading = document.getElementById('loading-novedades');
+  const wrapper = document.getElementById('tabla-novedades-wrapper');
+  const tbody = document.getElementById('tbody-novedades');
+  const soloAbiertas = document.getElementById('filtro-solo-abiertas').checked;
+
+  loading.style.display = 'block';
+  wrapper.style.display = 'none';
+  tbody.innerHTML = '';
+
+  try {
+    const res = await fetch(`/api/v1/novedades${soloAbiertas ? '?solo_abiertas=true' : ''}`);
+    if (!res.ok) throw new Error("Error al obtener novedades");
+    const novedades = await res.json();
+
+    loading.style.display = 'none';
+
+    if (novedades.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No hay novedades registradas con los filtros seleccionados.</td></tr>`;
+      wrapper.style.display = 'block';
+      return;
+    }
+
+    novedades.forEach(n => {
+      let badgeTipo = '<span class="badge badge-warning">Observación</span>';
+      if (n.tipo === 'dano') badgeTipo = '<span class="badge badge-danger">💥 Daño</span>';
+      if (n.tipo === 'faltante') badgeTipo = '<span class="badge badge-danger">❌ Faltante</span>';
+      if (n.tipo === 'retraso') badgeTipo = '<span class="badge badge-warning">⏰ Retraso</span>';
+
+      let badgeEstado = n.resuelta
+        ? '<span class="badge badge-success">✓ Resuelta</span>'
+        : '<span class="badge badge-danger">⚠️ Abierta (Inhabilitado)</span>';
+
+      let colResolucion = '<span class="text-xs text-muted">Pendiente</span>';
+      if (n.resuelta) {
+        colResolucion = `
+          <span class="text-xs">
+            <strong>Por:</strong> ${n.responsable_resolucion_nombre || 'Responsable'}<br>
+            <strong>Nota:</strong> ${n.observaciones_resolucion || 'Resuelta'}
+          </span>
+        `;
+      }
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>#${n.id}</strong></td>
+        <td>${badgeTipo}</td>
+        <td>
+          <strong>[${n.recurso_codigo}]</strong><br>
+          <span class="text-xs text-muted">${n.recurso_nombre}</span>
+        </td>
+        <td>
+          <strong>${n.usuario_nombre}</strong><br>
+          <span class="text-xs text-muted">${n.usuario_documento}</span>
+        </td>
+        <td><span class="text-xs">${n.descripcion}</span></td>
+        <td>${badgeEstado}</td>
+        <td>${colResolucion}</td>
+        <td>
+          ${!n.resuelta ? `
+            <button class="btn btn-gold btn-sm" onclick='abrirModalResolver(${JSON.stringify(n)})'>
+              🛠️ Resolver
+            </button>
+          ` : '<span class="text-xs text-muted">Sin acciones</span>'}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    wrapper.style.display = 'block';
+  } catch (err) {
+    loading.innerHTML = `<span class="text-danger">Error: ${err.message}</span>`;
+  }
+}
+
+function abrirModalResolver(novedad) {
+  novedadSeleccionada = novedad;
+  const info = document.getElementById('modal-resolver-info');
+  info.innerHTML = `
+    <strong>Novedad #${novedad.id} (${novedad.tipo.toUpperCase()})</strong><br>
+    <strong>Recurso:</strong> [${novedad.recurso_codigo}] ${novedad.recurso_nombre}<br>
+    <strong>Usuario Sancionado:</strong> ${novedad.usuario_nombre} (${novedad.usuario_documento})<br>
+    <strong>Detalle de la Novedad:</strong> <em>"${novedad.descripcion}"</em>
+  `;
+  document.getElementById('resolucion-obs').value = '';
+  document.getElementById('rehabilitar-recurso-check').checked = true;
+  document.getElementById('modal-resolver').style.display = 'flex';
+}
+
+function cerrarModalResolver() {
+  document.getElementById('modal-resolver').style.display = 'none';
+  novedadSeleccionada = null;
+}
+
+async function confirmarResolucion() {
+  if (!novedadSeleccionada) return;
+  const btn = document.getElementById('btn-confirmar-resolucion');
+  const obs = document.getElementById('resolucion-obs').value.trim();
+  const rehabilitarRecurso = document.getElementById('rehabilitar-recurso-check').checked;
+
+  if (obs.length < 5) {
+    alert("Por favor ingrese una justificación u observación válida de la solución (mínimo 5 caracteres).");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Resolviendo...';
+
+  try {
+    const res = await fetch(`/api/v1/novedades/${novedadSeleccionada.id}/resolver`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        observaciones_resolucion: obs,
+        rehabilitar_recurso: rehabilitarRecurso
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || "Error al resolver novedad");
+    }
+
+    cerrarModalResolver();
+    showAlert(`Novedad #${data.id} resuelta. Usuario y recurso evaluados conforme a la regla [RN-08].`, 'success');
+    await cargarNovedades();
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+    btn.disabled = false;
+    btn.textContent = 'Resolver Caso & Rehabilitar';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  cargarNovedades();
+});
+</script>
+{% endblock %}

@@ -7,9 +7,9 @@ Esta matriz vincula cada requisito funcional (RF), requisito no funcional (RNF) 
 | **CA-01** | Disponibilidad coherente por fechas | [A] Guía | `src/models/recurso.py`, `src/services/recurso_service.py` | TC-09, TC-18 | **Implementado** |
 | **CA-02** | Solicitud persistente y recuperable | [A] Guía | `src/models/solicitud.py`, `src/routers/solicitudes_router.py` | TC-10, TC-11, TC-14 | **Implementado** |
 | **CA-03** | Evaluación y gestión docente/responsable | [A] Guía | `src/services/evaluacion_service.py`, `src/routers/solicitudes_router.py` | TC-16, TC-17, TC-18, TC-19, TC-20 | **Implementado** |
-| **CA-04** | Asignación y entrega sin conflictos | [A] Guía | `src/models/prestamo.py`, `src/services/prestamo_service.py` | TC-22 | Diseñado |
-| **CA-05** | Devolución, historial y novedades | [A] Guía | `src/models/novedad.py`, `src/routers/prestamos_router.py` | TC-17, TC-18 | Diseñado |
-| **CA-06** | Consulta consolidada de coordinación | [A] Guía | `src/routers/reportes_router.py`, `src/templates/reportes.html` | TC-19 | Diseñado |
+| **CA-04** | Asignación y entrega sin conflictos | [A] Guía | `src/models/prestamo.py`, `src/services/prestamo_service.py`, `src/routers/prestamos_router.py` | TC-22, TC-23 | **Implementado** |
+| **CA-05** | Devolución, historial y novedades | [A] Guía | `src/models/novedad.py`, `src/services/prestamo_service.py`, `src/routers/novedades_router.py` | TC-24, TC-25, TC-26 | **Implementado** |
+| **CA-06** | Consulta consolidada de coordinación | [A] Guía | `src/routers/reportes_router.py`, `src/templates/reportes.html` | TC-27 | Diseñado |
 | **RF-01** | Autenticación con JWT Bearer y Argon2 | [A] Guía + [C] Equipo | `src/auth/security.py`, `src/routers/auth_router.py` | TC-02, TC-03, TC-04, TC-05 | **Implementado** |
 | **RNF-01** | Control de acceso basado en roles (RBAC) | [A] Guía | `src/auth/dependencies.py` (`require_roles`) | TC-06, TC-08 | **Implementado** |
 | **RNF-02** | No almacenar contraseñas en texto plano ni exponer hashes | [A] Guía | `src/auth/security.py`, `src/schemas/auth.py` | TC-02, TC-05 | **Implementado** |

@@ -26,13 +26,20 @@
     <a href="/catalogo" class="btn btn-primary btn-sm" id="link-catalogo">Explorar Catálogo →</a>
   </div>
 
-  <!-- MÓDULO: SOLICITUDES (Estudiantes y Docentes) -->
+  <!-- MÓDULO: SOLICITUDES Y PRÉSTAMOS (Estudiantes y Docentes) -->
   {% if user.rol.value in ['estudiante', 'docente'] %}
   <div class="module-card">
     <div class="module-icon">📋</div>
     <h3>Mis Solicitudes</h3>
     <p>Revise el estado de sus solicitudes (pendiente de docente, en revisión de responsable, aprobadas o rechazadas).</p>
     <a href="/solicitudes" class="btn btn-outline btn-sm" id="link-solicitudes">Ver Mis Solicitudes →</a>
+  </div>
+
+  <div class="module-card">
+    <div class="module-icon">📦</div>
+    <h3>Mis Préstamos</h3>
+    <p>Revise sus equipos en préstamo activo, fechas de devolución pactadas y su historial completo de entregas.</p>
+    <a href="/mis-prestamos" class="btn btn-outline btn-sm" id="link-mis-prestamos">Ver Mis Préstamos →</a>
   </div>
   {% endif %}
 
@@ -55,18 +62,18 @@
     <a href="/responsable/bandeja" class="btn btn-primary btn-sm" id="link-eval-responsable">Gestionar Aprobaciones (FIFO) →</a>
   </div>
 
-  <div class="module-card">
+  <div class="module-card highlight-card">
     <div class="module-icon">📦</div>
     <h3>Entregas y Devoluciones</h3>
     <p>Gestión de entregas físicas con validación de préstamos vencidos, recepción con registro de estado y novedades.</p>
-    <a href="/prestamos/gestion" class="btn btn-primary btn-sm disabled-link" id="link-prestamos">Próxima Etapa (Etapa 4)</a>
+    <a href="/responsable/prestamos" class="btn btn-primary btn-sm" id="link-prestamos">Gestionar Préstamos →</a>
   </div>
 
   <div class="module-card">
     <div class="module-icon">⚠️</div>
     <h3>Novedades e Inhabilitaciones</h3>
     <p>Seguimiento a recursos dañados o faltantes y gestión de rehabilitación de usuarios sancionados.</p>
-    <a href="/novedades/gestion" class="btn btn-primary btn-sm disabled-link" id="link-novedades">Próxima Etapa (Etapa 4)</a>
+    <a href="/responsable/novedades" class="btn btn-primary btn-sm" id="link-novedades">Gestionar Novedades →</a>
   </div>
 
   <div class="module-card">
