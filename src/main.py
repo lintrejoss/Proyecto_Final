@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.config import settings
 from src.database import engine, Base
 import src.models  # Registra todos los modelos ORM en Base.metadata
-from src.routers import auth_router, views_router
+from src.routers import auth_router, views_router, recursos_router, solicitudes_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -29,6 +29,8 @@ app.mount("/static", StaticFiles(directory="src/static"), name="static")
 # Registro de routers de API REST y vistas web
 app.include_router(views_router.router)
 app.include_router(auth_router.router)
+app.include_router(recursos_router.router)
+app.include_router(solicitudes_router.router)
 
 
 @app.get("/api/v1/health", tags=["Sistema"])

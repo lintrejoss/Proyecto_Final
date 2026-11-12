@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Solicitudes{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Mis Solicitudes de Préstamo</h2>
+    <p class="text-muted">Consulte el estado, evaluación y trazabilidad de sus solicitudes de herramientas y equipos.</p>
+  </div>
+  <div>
+    <a href="/catalogo" class="btn btn-primary">+ Nueva Solicitud</a>
+  </div>
+</div>
+
+<!-- Filtro por Estado -->
+<div class="filters-card py-2 mb-3">
+  <div class="d-flex align-items-center gap-2">
+    <label for="filtro-estado" class="mb-0"><strong>Filtrar por estado:</strong></label>
+    <select id="filtro-estado" class="form-control w-auto" onchange="cargarMisSolicitudes()">
+      <option value="">Todos los estados</option>
+      <option value="pendiente_docente">Pendiente Docente</option>
+      <option value="pendiente_responsable">Pendiente Responsable</option>
+      <option value="aprobada">Aprobadas</option>
+      <option value="rechazada">Rechazadas</option>
+      <option value="cancelada">Canceladas</option>
+    </select>
+  </div>
+</div>
+
+<div id="loading-spinner" class="text-center py-4" style="display: none;">
+  <p class="text-muted">Cargando solicitudes...</p>
+</div>
+
+<div id="solicitudes-container" class="solicitudes-list">
+  <!-- Renderizado dinámicamente -->
+</div>
+
+<div id="empty-state" class="empty-state" style="display: none;">
+  <p>📭 No tienes solicitudes registradas en este estado.</p>
+  <a href="/catalogo" class="btn btn-outline btn-sm mt-2">Ir al Catálogo de Recursos</a>
+</div>
+
+<!-- MODAL PARA CANCELAR SOLICITUD -->
+<div id="modal-cancelar" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Cancelar Solicitud #<span id="cancel-solicitud-id"></span></h3>
+      <button type="button" class="modal-close" onclick="cerrarModalCancelar()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-cancel-alert"></div>
+      <p class="text-muted">
+        Si la solicitud ya contaba con reserva firme, al cancelar se liberarán los recursos para que otros usuarios puedan utilizarlos.
+      </p>
+      <form id="form-cancelar" onsubmit="confirmarCancelacion(event)">
+        <div class="form-group">
+          <label for="motivo-cancelacion">Motivo de Cancelación *</label>
+          <textarea id="motivo-cancelacion" class="form-control" rows="3" placeholder="Explique brevemente el motivo de la cancelación..." required minlength="5"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="cerrarModalCancelar()">Volver</button>
+          <button type="submit" id="btn-confirmar-cancelar" class="btn btn-danger">Confirmar Cancelación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let solicitudACancelarId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  cargarMisSolicitudes();
+});
+
+async function cargarMisSolicitudes() {
+  const spinner = document.getElementById('loading-spinner');
+  const container = document.getElementById('solicitudes-container');
+  const empty = document.getElementById('empty-state');
+
+  spinner.style.display = 'block';
+  container.innerHTML = '';
+  empty.style.display = 'none';
+
+  const estado = document.getElementById('filtro-estado').value;
+  const params = new URLSearchParams();
+  params.append('solo_propias', 'true');
+  if (estado) params.append('estado', estado);
+
+  try {
+    const solicitudes = await fetchAPI(`/api/v1/solicitudes?${params.toString()}`);
+    spinner.style.display = 'none';
+
+    if (solicitudes.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    renderizarSolicitudes(solicitudes);
+  } catch (err) {
+    spinner.style.display = 'none';
+    showAlert('Error al cargar solicitudes: ' + err.message, 'danger');
+  }
+}
+
+function renderizarSolicitudes(solicitudes) {
+  const container = document.getElementById('solicitudes-container');
+  container.innerHTML = '';
+
+  solicitudes.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'solicitud-card';
+
+    let badgeClass = 'badge-warning';
+    let badgeText = s.estado;
+    if (s.estado === 'aprobada') badgeClass = 'badge-success';
+    if (s.estado === 'rechazada') badgeClass = 'badge-danger';
+    if (s.estado === 'cancelada') badgeClass = 'badge-secondary';
+    if (s.estado === 'pendiente_responsable') badgeClass = 'badge-info';
+
+    // Lista de recursos
+    const recursosList = s.recursos.map(r => `
+      <span class="recurso-tag"><strong>[${r.codigo}]</strong> ${r.nombre}</span>
+    `).join(' ');
+
+    // Puede cancelar si no está rechazada ni cancelada
+    const puedeCancelar = ['pendiente_docente', 'pendiente_responsable', 'aprobada'].includes(s.estado);
+
+    let detalleEvaluacion = '';
+    if (s.docente_evaluo) {
+      detalleEvaluacion += `<p class="small text-muted mb-1">👨‍🏫 <strong>Visto Bueno Docente:</strong> ${s.docente_evaluo.nombre_completo} (${formatBogotaDate(s.fecha_evaluacion_docente)})</p>`;
+    }
+    if (s.responsable_evaluo) {
+      detalleEvaluacion += `<p class="small text-muted mb-1">🛡️ <strong>Evaluación Responsable:</strong> ${s.responsable_evaluo.nombre_completo} (${formatBogotaDate(s.fecha_evaluacion_responsable)})</p>`;
+    }
+    if (s.motivo_rechazo) {
+      detalleEvaluacion += `<p class="text-danger small mb-1"><strong>Motivo de Rechazo:</strong> ${s.motivo_rechazo}</p>`;
+    }
+    if (s.motivo_cancelacion) {
+      detalleEvaluacion += `<p class="text-secondary small mb-1"><strong>Motivo de Cancelación:</strong> ${s.motivo_cancelacion}</p>`;
+    }
+
+    card.innerHTML = `
+      <div class="solicitud-header">
+        <div>
+          <span class="solicitud-num">Solicitud #${s.id}</span>
+          <span class="text-muted small ml-2">Radicada el ${formatBogotaDate(s.creado_en)}</span>
+        </div>
+        <span class="status-badge ${badgeClass}">${badgeText.toUpperCase()}</span>
+      </div>
+
+      <div class="solicitud-body">
+        <div class="mb-2">
+          <strong>Período Solicitado:</strong> 
+          <span class="fecha-rango">📅 ${formatBogotaDate(s.fecha_inicio)} &nbsp;➔&nbsp; ${formatBogotaDate(s.fecha_fin)}</span>
+        </div>
+        <div class="mb-2">
+          <strong>Recursos (${s.recursos.length}):</strong>
+          <div class="recursos-tags-container mt-1">${recursosList}</div>
+        </div>
+        <div class="mb-2">
+          <strong>Motivo:</strong>
+          <p class="text-muted mb-1">${s.motivo}</p>
+        </div>
+        ${detalleEvaluacion}
+      </div>
+
+      <div class="solicitud-footer">
+        ${puedeCancelar ? `
+          <button type="button" class="btn btn-outline btn-sm text-danger" onclick="abrirModalCancelar(${s.id})">
+            ✕ Cancelar Solicitud
+          </button>
+        ` : `<span></span>`}
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function abrirModalCancelar(solicitudId) {
+  solicitudACancelarId = solicitudId;
+  document.getElementById('cancel-solicitud-id').innerText = solicitudId;
+  document.getElementById('motivo-cancelacion').value = '';
+  document.getElementById('modal-cancel-alert').innerHTML = '';
+  document.getElementById('modal-cancelar').style.display = 'flex';
+}
+
+function cerrarModalCancelar() {
+  document.getElementById('modal-cancelar').style.display = 'none';
+  solicitudACancelarId = null;
+}
+
+async function confirmarCancelacion(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-confirmar-cancelar');
+  const alertContainer = document.getElementById('modal-cancel-alert');
+  alertContainer.innerHTML = '';
+
+  const motivo = document.getElementById('motivo-cancelacion').value.trim();
+  btn.disabled = true;
+  btn.innerText = 'Cancelando...';
+
+  try {
+    await fetchAPI(`/api/v1/solicitudes/${solicitudACancelarId}/cancelar`, {
+      method: 'POST',
+      body: JSON.stringify({ motivo_cancelacion: motivo })
+    });
+
+    cerrarModalCancelar();
+    showAlert(`Solicitud #${solicitudACancelarId} cancelada exitosamente.`, 'success');
+    cargarMisSolicitudes();
+  } catch (err) {
+    alertContainer.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Confirmar Cancelación';
+  }
+}
+</script>
+{% endblock %}
+

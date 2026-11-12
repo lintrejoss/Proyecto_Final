@@ -41,6 +41,22 @@ def index_dashboard(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
 
 
+@router.get("/catalogo", response_class=HTMLResponse)
+def catalogo_page(request: Request, db: Session = Depends(get_db)):
+    user = get_optional_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("catalogo.html", {"request": request, "user": user})
+
+
+@router.get("/solicitudes", response_class=HTMLResponse)
+def solicitudes_page(request: Request, db: Session = Depends(get_db)):
+    user = get_optional_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("solicitudes.html", {"request": request, "user": user})
+
+
 @router.get("/logout", response_class=HTMLResponse)
 def logout_view(request: Request):
     response = RedirectResponse(url="/login", status_code=302)

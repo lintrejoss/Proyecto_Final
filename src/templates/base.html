@@ -17,6 +17,11 @@
       </div>
       <nav class="nav-links">
         {% if user %}
+          <a href="/" class="nav-item">Inicio</a>
+          <a href="/catalogo" class="nav-item">Catálogo</a>
+          {% if user.rol.value in ['estudiante', 'docente'] %}
+            <a href="/solicitudes" class="nav-item">Mis Solicitudes</a>
+          {% endif %}
           <div class="user-info">
             <span class="user-name">{{ user.nombre_completo }}</span>
             <span class="role-badge role-{{ user.rol.value }}">{{ user.rol.value | capitalize }}</span>
