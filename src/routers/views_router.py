@@ -30,7 +30,7 @@ def login_page(request: Request, db: Session = Depends(get_db)):
     user = get_optional_user(request, db)
     if user:
         return RedirectResponse(url="/", status_code=302)
-    return templates.TemplateResponse("login.html", {"request": request, "user": None})
+    return templates.TemplateResponse(request, "login.html", {"user": None})
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -38,7 +38,7 @@ def index_dashboard(request: Request, db: Session = Depends(get_db)):
     user = get_optional_user(request, db)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
+    return templates.TemplateResponse(request, "dashboard.html", {"user": user})
 
 
 @router.get("/catalogo", response_class=HTMLResponse)
@@ -46,7 +46,7 @@ def catalogo_page(request: Request, db: Session = Depends(get_db)):
     user = get_optional_user(request, db)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("catalogo.html", {"request": request, "user": user})
+    return templates.TemplateResponse(request, "catalogo.html", {"user": user})
 
 
 @router.get("/solicitudes", response_class=HTMLResponse)
@@ -54,7 +54,7 @@ def solicitudes_page(request: Request, db: Session = Depends(get_db)):
     user = get_optional_user(request, db)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("solicitudes.html", {"request": request, "user": user})
+    return templates.TemplateResponse(request, "solicitudes.html", {"user": user})
 
 
 @router.get("/docente/bandeja", response_class=HTMLResponse)
@@ -64,7 +64,7 @@ def docente_bandeja_page(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/login", status_code=302)
     if user.rol.value != "docente":
         return RedirectResponse(url="/", status_code=302)
-    return templates.TemplateResponse("docente_bandeja.html", {"request": request, "user": user})
+    return templates.TemplateResponse(request, "docente_bandeja.html", {"user": user})
 
 
 @router.get("/responsable/bandeja", response_class=HTMLResponse)
@@ -74,7 +74,7 @@ def responsable_bandeja_page(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/login", status_code=302)
     if user.rol.value != "responsable":
         return RedirectResponse(url="/", status_code=302)
-    return templates.TemplateResponse("responsable_bandeja.html", {"request": request, "user": user})
+    return templates.TemplateResponse(request, "responsable_bandeja.html", {"user": user})
 
 
 @router.get("/responsable/prestamos", response_class=HTMLResponse)
@@ -84,7 +84,7 @@ def responsable_prestamos_page(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/login", status_code=302)
     if user.rol.value not in ["responsable", "coordinacion"]:
         return RedirectResponse(url="/", status_code=302)
-    return templates.TemplateResponse("prestamos_gestion.html", {"request": request, "user": user})
+    return templates.TemplateResponse(request, "prestamos_gestion.html", {"user": user})
 
 
 @router.get("/responsable/novedades", response_class=HTMLResponse)
@@ -94,7 +94,7 @@ def responsable_novedades_page(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/login", status_code=302)
     if user.rol.value not in ["responsable", "coordinacion"]:
         return RedirectResponse(url="/", status_code=302)
-    return templates.TemplateResponse("novedades_gestion.html", {"request": request, "user": user})
+    return templates.TemplateResponse(request, "novedades_gestion.html", {"user": user})
 
 
 @router.get("/mis-prestamos", response_class=HTMLResponse)
@@ -102,12 +102,19 @@ def mis_prestamos_page(request: Request, db: Session = Depends(get_db)):
     user = get_optional_user(request, db)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("mis_prestamos.html", {"request": request, "user": user})
+    return templates.TemplateResponse(request, "mis_prestamos.html", {"user": user})
 
+@router.get("/reportes/consolidado", response_class=HTMLResponse)
+def reportes_consolidado_page(request: Request, db: Session = Depends(get_db)):
+    user = get_optional_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    if user.rol.value not in ["coordinacion", "responsable"]:
+        return RedirectResponse(url="/", status_code=302)
+    return templates.TemplateResponse(request, "reportes_consolidado.html", {"user": user})
 
 @router.get("/logout", response_class=HTMLResponse)
 def logout_view(request: Request):
     response = RedirectResponse(url="/login", status_code=302)
     response.delete_cookie(key="access_token")
     return response
-

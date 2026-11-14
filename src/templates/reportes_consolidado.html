@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+
+{% block title %}Consulta Consolidada{% endblock %}
+
+{% block content %}
+<style>
+  /* Estilos propios de esta vista (prefijo rc-), basados en la paleta MK.books */
+  .rc-header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.75rem; }
+  .rc-header p { max-width: 640px; }
+  .rc-section-title { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: .5rem; margin: 2.25rem 0 1rem; }
+  .rc-section-title h3 { margin: 0; }
+  .rc-note { font-size: .8rem; color: var(--sy-text-muted); }
+
+  .rc-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; }
+  .rc-kpi { background: var(--sy-surface); border: 1px solid var(--sy-border); border-top: 3px solid var(--sy-gold);
+            border-radius: var(--radius-md); padding: 1.15rem 1.25rem; box-shadow: var(--shadow-subtle); }
+  .rc-kpi-label { font-size: .7rem; letter-spacing: 1.4px; text-transform: uppercase; color: var(--sy-text-muted); font-weight: 600; }
+  .rc-kpi-value { font-family: var(--font-serif); font-size: 2.6rem; line-height: 1.1; color: var(--sy-black); margin: .35rem 0 .15rem; }
+  .rc-kpi-sub { font-size: .78rem; color: var(--sy-text-muted); min-height: 1.1rem; }
+  .rc-kpi.rc-kpi-alert { border-top-color: var(--sy-danger); }
+  .rc-kpi.rc-kpi-alert .rc-kpi-value { color: var(--sy-danger); }
+  .rc-kpi.rc-kpi-ok { border-top-color: var(--sy-success); }
+
+  .rc-two-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; }
+  .rc-panel { background: var(--sy-surface); border: 1px solid var(--sy-border); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: var(--shadow-subtle); }
+  .rc-panel h4 { margin-bottom: .75rem; }
+
+  .rc-filters { background: var(--sy-surface); border: 1px solid var(--sy-border); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: var(--shadow-subtle); }
+  .rc-filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; align-items: end; }
+  .rc-filters label { display: block; font-size: .72rem; letter-spacing: 1px; text-transform: uppercase; color: var(--sy-text-muted); margin-bottom: .3rem; font-weight: 600; }
+  .rc-filters input, .rc-filters select { width: 100%; padding: .55rem .7rem; border: 1px solid var(--sy-border); border-radius: var(--radius-sm);
+            font-family: var(--font-sans); font-size: .9rem; background: var(--sy-cream); color: var(--sy-text); }
+  .rc-filters input:focus, .rc-filters select:focus { outline: none; border-color: var(--sy-gold); box-shadow: 0 0 0 3px var(--sy-gold-subtle); }
+  .rc-filter-actions { display: flex; gap: .6rem; }
+
+  .rc-table-wrap { overflow-x: auto; background: var(--sy-surface); border: 1px solid var(--sy-border); border-radius: var(--radius-md); box-shadow: var(--shadow-subtle); }
+  table.rc-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  .rc-table thead th { background: var(--sy-black); color: var(--sy-gold); font-family: var(--font-sans); font-size: .68rem; letter-spacing: 1.4px;
+            text-transform: uppercase; text-align: left; padding: .85rem 1rem; white-space: nowrap; font-weight: 600; }
+  .rc-table tbody td { padding: .9rem 1rem; border-bottom: 1px solid var(--sy-border-light); vertical-align: top; }
+  .rc-table tbody tr:hover { background: var(--sy-cream); }
+  .rc-table tbody tr.rc-row-vencido { background: var(--sy-danger-bg); }
+  .rc-table .rc-strong { font-weight: 600; color: var(--sy-black); }
+  .rc-table .rc-muted { color: var(--sy-text-muted); font-size: .76rem; }
+  .rc-empty { text-align: center; color: var(--sy-text-muted); padding: 2.25rem 1rem !important; }
+
+  .rc-badge { display: inline-block; padding: .2rem .6rem; border-radius: 999px; font-size: .7rem; font-weight: 600; letter-spacing: .3px; white-space: nowrap; border: 1px solid transparent; }
+  .rc-badge-success { background: var(--sy-success-bg); color: var(--sy-success); border-color: var(--sy-success-border); }
+  .rc-badge-danger  { background: var(--sy-danger-bg);  color: var(--sy-danger);  border-color: var(--sy-danger-border); }
+  .rc-badge-warning { background: var(--sy-warning-bg); color: var(--sy-warning); border-color: var(--sy-warning-border); }
+  .rc-badge-info    { background: var(--sy-info-bg);    color: var(--sy-info);    border-color: var(--sy-info-border); }
+
+  .rc-mora { display: block; margin-top: .4rem; font-size: .74rem; font-weight: 600; }
+  .rc-mora-alta { color: var(--sy-danger); }
+  .rc-mora-media { color: var(--sy-warning); }
+  .rc-mora-ok { color: var(--sy-success); }
+
+  .rc-chip { display: inline-block; background: var(--sy-gold-subtle); border: 1px solid var(--sy-gold-border); border-radius: var(--radius-sm);
+            padding: .1rem .45rem; font-size: .72rem; margin: 0 .25rem .25rem 0; white-space: nowrap; }
+  .rc-trace div { font-size: .76rem; line-height: 1.5; white-space: nowrap; }
+  .rc-trace span { display: inline-block; min-width: 82px; color: var(--sy-text-muted); text-transform: uppercase; font-size: .62rem; letter-spacing: 1px; }
+
+  .rc-mini-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  .rc-mini-table td, .rc-mini-table th { padding: .5rem .25rem; border-bottom: 1px solid var(--sy-border-light); text-align: left; }
+  .rc-mini-table th { font-size: .66rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--sy-text-muted); font-weight: 600; }
+  .rc-mini-table .rc-num { text-align: right; font-weight: 700; font-family: var(--font-serif); font-size: 1.1rem; }
+
+  .rc-audit-list { list-style: none; margin-top: .75rem; }
+  .rc-audit-list li { padding: .6rem 0; border-bottom: 1px solid var(--sy-border-light); font-size: .8rem; }
+  .rc-audit-list .rc-audit-meta { color: var(--sy-text-muted); font-size: .72rem; }
+  .rc-load-more { text-align: center; margin: 1rem 0 0; }
+</style>
+
+<div class="rc-header">
+  <div>
+    <span class="eyebrow-tag">Coordinación &bull; CA-06 / RF-12</span>
+    <h1>Consulta Consolidada</h1>
+    <p class="text-muted">Información consolidada de préstamos y recursos, con estados, métricas, morosidad y responsables de cada operación.</p>
+  </div>
+  <button type="button" class="btn btn-outline btn-sm" id="btn-actualizar">Actualizar todo</button>
+</div>
+
+<!-- KPIs -->
+<div class="rc-kpi-grid" id="kpi-grid">
+  <div class="rc-kpi">
+    <div class="rc-kpi-label">Total préstamos</div>
+    <div class="rc-kpi-value" id="kpi-total">–</div>
+    <div class="rc-kpi-sub" id="kpi-total-sub">&nbsp;</div>
+  </div>
+  <div class="rc-kpi">
+    <div class="rc-kpi-label">En curso</div>
+    <div class="rc-kpi-value" id="kpi-activos">–</div>
+    <div class="rc-kpi-sub">Incluye los vencidos</div>
+  </div>
+  <div class="rc-kpi" id="kpi-vencidos-card">
+    <div class="rc-kpi-label">Vencidos (en mora)</div>
+    <div class="rc-kpi-value" id="kpi-vencidos">–</div>
+    <div class="rc-kpi-sub">En curso pasada la fecha fin</div>
+  </div>
+  <div class="rc-kpi" id="kpi-danados-card">
+    <div class="rc-kpi-label">Dañados / Faltantes</div>
+    <div class="rc-kpi-value" id="kpi-danados">–</div>
+    <div class="rc-kpi-sub" id="kpi-danados-sub">Recursos no disponibles</div>
+  </div>
+  <div class="rc-kpi rc-kpi-ok">
+    <div class="rc-kpi-label">Tasa de cumplimiento</div>
+    <div class="rc-kpi-value" id="kpi-cumplimiento">–</div>
+    <div class="rc-kpi-sub" id="kpi-cumplimiento-sub">Devueltos a tiempo</div>
+  </div>
+  <div class="rc-kpi">
+    <div class="rc-kpi-label">Recursos registrados</div>
+    <div class="rc-kpi-value" id="kpi-recursos">–</div>
+    <div class="rc-kpi-sub" id="kpi-recursos-sub">&nbsp;</div>
+  </div>
+</div>
+
+<!-- Resumen institucional -->
+<div class="rc-section-title">
+  <h3>Resumen institucional</h3>
+  <span class="rc-note">Los indicadores reflejan el total institucional; los filtros aplican a la tabla consolidada.</span>
+</div>
+<div class="rc-two-cols">
+  <div class="rc-panel">
+    <h4>Recursos más prestados</h4>
+    <table class="rc-mini-table">
+      <thead><tr><th>Recurso</th><th>Categoría</th><th style="text-align:right">Préstamos</th></tr></thead>
+      <tbody id="tbody-ranking"><tr><td colspan="3" class="rc-note">Cargando…</td></tr></tbody>
+    </table>
+  </div>
+  <div class="rc-panel">
+    <h4>Recursos con novedades abiertas</h4>
+    <table class="rc-mini-table">
+      <thead><tr><th>Recurso</th><th>Condición</th><th style="text-align:right">Novedades</th></tr></thead>
+      <tbody id="tbody-novedades"><tr><td colspan="3" class="rc-note">Cargando…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Filtros -->
+<div class="rc-section-title">
+  <h3>Historial consolidado de préstamos</h3>
+  <span class="rc-note" id="rc-contador">&nbsp;</span>
+</div>
+<form class="rc-filters" id="form-filtros" autocomplete="off">
+  <div class="rc-filters-grid">
+    <div>
+      <label for="f-desde">Entrega desde</label>
+      <input type="date" id="f-desde">
+    </div>
+    <div>
+      <label for="f-hasta">Entrega hasta</label>
+      <input type="date" id="f-hasta">
+    </div>
+    <div>
+      <label for="f-estado">Estado</label>
+      <select id="f-estado">
+        <option value="">Todos</option>
+        <option value="en_curso">En curso</option>
+        <option value="vencido">Vencidos (en mora)</option>
+        <option value="devuelto">Devueltos</option>
+      </select>
+    </div>
+    <div>
+      <label for="f-categoria">Categoría de recurso</label>
+      <select id="f-categoria">
+        <option value="">Todas</option>
+        <option value="herramienta">Herramienta</option>
+        <option value="equipo">Equipo</option>
+      </select>
+    </div>
+    <div>
+      <label for="f-solicitante">Solicitante</label>
+      <input type="text" id="f-solicitante" placeholder="Nombre, correo o documento" maxlength="100">
+    </div>
+    <div class="rc-filter-actions">
+      <button type="submit" class="btn btn-primary btn-sm" id="btn-filtrar">Filtrar</button>
+      <button type="button" class="btn btn-outline btn-sm" id="btn-limpiar">Limpiar</button>
+    </div>
+  </div>
+</form>
+
+<!-- Tabla consolidada -->
+<div class="rc-table-wrap" style="margin-top: 1rem;">
+  <table class="rc-table">
+    <thead>
+      <tr>
+        <th>Préstamo</th>
+        <th>Solicitante</th>
+        <th>Recursos</th>
+        <th>Fechas pactadas vs. reales</th>
+        <th>Estado / Morosidad</th>
+        <th>Trazabilidad</th>
+        <th>Novedades</th>
+      </tr>
+    </thead>
+    <tbody id="tbody-consolidado">
+      <tr><td colspan="7" class="rc-empty">Cargando información…</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="rc-load-more">
+  <button type="button" class="btn btn-outline btn-sm" id="btn-mas" style="display:none;">Cargar más registros</button>
+</div>
+
+<!-- Auditoría -->
+<div class="rc-section-title">
+  <h3>Trazabilidad y auditoría</h3>
+  <span class="rc-note" id="rc-audit-total">&nbsp;</span>
+</div>
+<div class="rc-two-cols">
+  <div class="rc-panel">
+    <h4>Eventos por acción</h4>
+    <table class="rc-mini-table">
+      <thead><tr><th>Acción</th><th style="text-align:right">Eventos</th></tr></thead>
+      <tbody id="tbody-acciones"><tr><td colspan="2" class="rc-note">Cargando…</td></tr></tbody>
+    </table>
+  </div>
+  <div class="rc-panel">
+    <h4>Últimos eventos registrados</h4>
+    <ul class="rc-audit-list" id="lista-auditoria"><li class="rc-note">Cargando…</li></ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const API_REPORTES = '/api/v1/reportes';
+  const PAGE_SIZE = 50;
+  let offsetActual = 0;
+
+  function esc(valor) {
+    const mapa = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    return String(valor === null || valor === undefined ? '' : valor).replace(/[&<>"']/g, c => mapa[c]);
+  }
+
+  function setText(id, valor) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = valor;
+  }
+
+  async function consultar(url) {
+    const res = await fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+    if (res.status === 401) {
+      window.location.href = '/login?msg=sesion_expirada';
+      throw new Error('La sesión expiró. Inicie sesión nuevamente.');
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      let detalle = data.detail;
+      if (Array.isArray(detalle)) detalle = detalle.map(d => d.msg).join('; ');
+      throw new Error(detalle || 'No fue posible completar la consulta.');
+    }
+    return data;
+  }
+
+  function fmtDuracion(horas) {
+    if (horas === null || horas === undefined) return '';
+    const totalMin = Math.round(horas * 60);
+    if (totalMin < 60) return totalMin + ' min';
+    const h = Math.floor(totalMin / 60);
+    if (h < 48) return h + ' h ' + (totalMin % 60) + ' min';
+    return Math.floor(h / 24) + ' d ' + (h % 24) + ' h';
+  }
+
+  const NOMBRE_TIPO = { dano: 'Daño', faltante: 'Faltante', retraso: 'Retraso', observacion: 'Observación' };
+  const NOMBRE_CONDICION = { habilitado: 'Habilitado', no_disponible: 'No disponible', dado_de_baja: 'Dado de baja' };
+
+  /* ------------------------------ KPIs ------------------------------ */
+  async function cargarMetricas() {
+    try {
+      const m = await consultar(API_REPORTES + '/metricas?top=5');
+
+      setText('kpi-total', m.total_prestamos);
+      setText('kpi-total-sub', m.prestamos_devueltos + ' devueltos');
+      setText('kpi-activos', m.prestamos_activos);
+      setText('kpi-vencidos', m.prestamos_vencidos);
+      document.getElementById('kpi-vencidos-card').classList.toggle('rc-kpi-alert', m.prestamos_vencidos > 0);
+      setText('kpi-danados', m.recursos_no_disponibles);
+      setText('kpi-danados-sub', m.recursos_con_novedad_abierta + ' con novedad abierta');
+      document.getElementById('kpi-danados-card').classList.toggle('rc-kpi-alert', m.recursos_no_disponibles > 0);
+
+      if (m.tasa_cumplimiento === null || m.tasa_cumplimiento === undefined) {
+        setText('kpi-cumplimiento', '—');
+        setText('kpi-cumplimiento-sub', 'Aún sin devoluciones');
+      } else {
+        setText('kpi-cumplimiento', m.tasa_cumplimiento + '%');
+        setText('kpi-cumplimiento-sub', m.devueltos_a_tiempo + ' de ' + m.prestamos_devueltos + ' devueltos a tiempo');
+      }
+      setText('kpi-recursos', m.recursos_totales);
+      setText('kpi-recursos-sub', m.recursos_totales - m.recursos_no_disponibles + ' sin restricción de condición');
+
+      renderRanking(m.recursos_mas_prestados);
+      renderRecursosConNovedad(m.recursos_con_novedades_abiertas);
+    } catch (err) {
+      showAlert('Métricas: ' + esc(err.message), 'danger');
+    }
+  }
+
+  function renderRanking(lista) {
+    const tbody = document.getElementById('tbody-ranking');
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="3" class="rc-note">Aún no hay préstamos registrados.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = lista.map(r => `
+      <tr>
+        <td><strong>[${esc(r.codigo)}]</strong> ${esc(r.nombre)}</td>
+        <td>${esc(r.categoria)}</td>
+        <td class="rc-num">${r.total_prestamos}</td>
+      </tr>`).join('');
+  }
+
+  function renderRecursosConNovedad(lista) {
+    const tbody = document.getElementById('tbody-novedades');
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="3" class="rc-note">No hay novedades abiertas.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = lista.map(r => `
+      <tr>
+        <td><strong>[${esc(r.codigo)}]</strong> ${esc(r.nombre)}<br>
+            <span class="rc-note">${r.tipos.map(t => esc(NOMBRE_TIPO[t] || t)).join(', ')}</span></td>
+        <td><span class="rc-badge ${r.condicion === 'habilitado' ? 'rc-badge-success' : 'rc-badge-danger'}">${esc(NOMBRE_CONDICION[r.condicion] || r.condicion)}</span></td>
+        <td class="rc-num">${r.novedades_abiertas}</td>
+      </tr>`).join('');
+  }
+
+  /* ------------------------- Tabla consolidada ------------------------- */
+  function leerFiltros() {
+    const p = new URLSearchParams();
+    const campos = { fecha_desde: 'f-desde', fecha_hasta: 'f-hasta', estado: 'f-estado', categoria: 'f-categoria', solicitante: 'f-solicitante' };
+    Object.keys(campos).forEach(clave => {
+      const valor = document.getElementById(campos[clave]).value.trim();
+      if (valor) p.set(clave, valor);
+    });
+    return p;
+  }
+
+  function badgeEstado(it) {
+    if (it.es_vencido) return '<span class="rc-badge rc-badge-danger">Vencido · en mora</span>';
+    if (it.estado === 'en_curso') return '<span class="rc-badge rc-badge-info">En curso</span>';
+    return '<span class="rc-badge rc-badge-success">Devuelto</span>';
+  }
+
+  function indicadorMorosidad(it) {
+    if (it.es_vencido) {
+      return '<span class="rc-mora rc-mora-alta">● Mora: ' + fmtDuracion(it.horas_retraso) + '</span>';
+    }
+    if (it.estado === 'devuelto' && it.devuelto_a_tiempo === false) {
+      return '<span class="rc-mora rc-mora-media">● Devuelto con ' + fmtDuracion(it.horas_retraso) + ' de retraso</span>';
+    }
+    if (it.estado === 'devuelto') return '<span class="rc-mora rc-mora-ok">● Devuelto a tiempo</span>';
+    return '<span class="rc-mora rc-mora-ok">● Dentro del plazo</span>';
+  }
+
+  function nombreDe(u) {
+    return u ? esc(u.nombre_completo) : '—';
+  }
+
+  function renderFila(it) {
+    const t = it.trazabilidad;
+    const recursos = it.recursos.map(r => `<span class="rc-chip" title="${esc(r.nombre)}">${esc(r.codigo)}</span>`).join('');
+    const novedades = it.novedades.length
+      ? it.novedades.map(n => `<div><span class="rc-badge ${n.resuelta ? 'rc-badge-success' : 'rc-badge-danger'}">${esc(NOMBRE_TIPO[n.tipo] || n.tipo)} · ${n.resuelta ? 'Resuelta' : 'Abierta'}</span>
+          <div class="rc-muted">${esc(n.recurso_codigo)}: ${esc(n.descripcion)}</div></div>`).join('')
+      : '<span class="rc-muted">Sin novedades</span>';
+
+    return `
+      <tr class="${it.es_vencido ? 'rc-row-vencido' : ''}">
+        <td><span class="rc-strong">#${it.prestamo_id}</span><div class="rc-muted">Solicitud #${it.solicitud_id}</div></td>
+        <td><span class="rc-strong">${esc(it.solicitante.nombre_completo)}</span>
+            <div class="rc-muted">${esc(it.solicitante.documento)} · ${esc(it.solicitante.rol)}</div></td>
+        <td>${recursos}</td>
+        <td>
+          <div class="rc-muted">Pactado</div>
+          <div>${formatBogotaDate(it.fecha_inicio_prevista)} → ${formatBogotaDate(it.fecha_fin_prevista)}</div>
+          <div class="rc-muted" style="margin-top:.4rem;">Real</div>
+          <div>Entrega: ${formatBogotaDate(it.fecha_entrega_real)}</div>
+          <div>Devolución: ${it.fecha_devolucion_real ? formatBogotaDate(it.fecha_devolucion_real) : '—'}</div>
+        </td>
+        <td>${badgeEstado(it)}${indicadorMorosidad(it)}</td>
+        <td class="rc-trace">
+          ${t.docente_aprobo ? `<div><span>Aval docente</span>${nombreDe(t.docente_aprobo)}</div>` : ''}
+          <div><span>Aprobó</span>${nombreDe(t.responsable_aprobo)}</div>
+          <div><span>Entregó</span>${nombreDe(t.responsable_entrega)}</div>
+          <div><span>Recibió</span>${nombreDe(t.responsable_recepcion)}</div>
+        </td>
+        <td>${novedades}</td>
+      </tr>`;
+  }
+
+  async function cargarConsolidado(reiniciar) {
+    const tbody = document.getElementById('tbody-consolidado');
+    const btnMas = document.getElementById('btn-mas');
+    if (reiniciar) {
+      offsetActual = 0;
+      tbody.innerHTML = '<tr><td colspan="7" class="rc-empty">Cargando información…</td></tr>';
+    }
+
+    const params = leerFiltros();
+    params.set('limit', PAGE_SIZE);
+    params.set('offset', offsetActual);
+
+    try {
+      const data = await consultar(API_REPORTES + '/consolidado?' + params.toString());
+
+      if (reiniciar) tbody.innerHTML = '';
+      if (data.total_registros === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="rc-empty">No hay préstamos que coincidan con los filtros seleccionados.</td></tr>';
+      } else {
+        tbody.insertAdjacentHTML('beforeend', data.items.map(renderFila).join(''));
+      }
+
+      offsetActual += data.items.length;
+      setText('rc-contador', 'Mostrando ' + offsetActual + ' de ' + data.total_registros + ' préstamos');
+      btnMas.style.display = offsetActual < data.total_registros ? 'inline-block' : 'none';
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="7" class="rc-empty">' + esc(err.message) + '</td></tr>';
+      btnMas.style.display = 'none';
+      setText('rc-contador', '');
+    }
+  }
+
+  /* ----------------------------- Auditoría ----------------------------- */
+  async function cargarAuditoria() {
+    try {
+      const a = await consultar(API_REPORTES + '/auditoria?limite=8');
+      setText('rc-audit-total', a.total_eventos + ' eventos registrados');
+
+      const tbody = document.getElementById('tbody-acciones');
+      tbody.innerHTML = a.eventos_por_accion.length
+        ? a.eventos_por_accion.map(x => `<tr><td>${esc(x.accion)}</td><td class="rc-num">${x.total}</td></tr>`).join('')
+        : '<tr><td colspan="2" class="rc-note">Sin eventos de auditoría.</td></tr>';
+
+      const lista = document.getElementById('lista-auditoria');
+      lista.innerHTML = a.ultimos_eventos.length
+        ? a.ultimos_eventos.map(e => `
+            <li><strong>${esc(e.accion)}</strong> <span class="rc-muted">· ${esc(e.entidad)}${e.entidad_id ? ' #' + e.entidad_id : ''}</span>
+              <div class="rc-audit-meta">${esc(e.usuario_nombre || 'Sistema')} · ${formatBogotaDate(e.creado_en)}</div>
+              <div>${esc(e.detalles || '')}</div></li>`).join('')
+        : '<li class="rc-note">Sin eventos de auditoría.</li>';
+    } catch (err) {
+      showAlert('Auditoría: ' + esc(err.message), 'danger');
+    }
+  }
+
+  /* ------------------------------ Eventos ------------------------------ */
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('form-filtros').addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      cargarConsolidado(true);
+    });
+    document.getElementById('btn-limpiar').addEventListener('click', () => {
+      document.getElementById('form-filtros').reset();
+      cargarConsolidado(true);
+    });
+    document.getElementById('btn-mas').addEventListener('click', () => cargarConsolidado(false));
+    document.getElementById('btn-actualizar').addEventListener('click', () => {
+      cargarMetricas();
+      cargarConsolidado(true);
+      cargarAuditoria();
+    });
+
+    cargarMetricas();
+    cargarConsolidado(true);
+    cargarAuditoria();
+  });
+</script>
+{% endblock %}
