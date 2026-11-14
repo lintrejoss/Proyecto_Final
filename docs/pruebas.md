@@ -65,7 +65,17 @@ Este documento registra los casos de prueba del **Sistema de Préstamos de Herra
 
 ---
 
-## 5. Pruebas Planificadas para Etapas Posteriores
 
-- **TC-27 (Etapa 5)**: Consulta consolidada de coordinación con auditoría completa (CA-06, RF-12).
+
+## 5. Pruebas de la Etapa 5: Consulta Consolidada y Reportes de Coordinación
+
+| ID Prueba | Requisito | Descripción | Precondiciones | Datos de Entrada | Resultado Esperado | Estado | Código HTTP |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TC-27** | CA-06, RF-12 | Control de acceso (RBAC) a los endpoints de reportes | Usuarios de los 4 roles y petición sin sesión | GET `/api/v1/reportes/metricas`, `/consolidado` y `/auditoria` con cada rol | Sin sesión: HTTP 401. Estudiante y Docente: HTTP 403. Coordinación y Responsable: HTTP 200 | **PASÓ** | 401 / 403 / 200 |
+| **TC-28** | CA-06, RF-12 | Acceso a la vista web de Consulta Consolidada según rol | Usuarios de los 4 roles y petición sin sesión | GET `/reportes/consolidado` con cada rol | Coordinación y Responsable: se muestra la vista. Estudiante y Docente: redirección a `/`. Sin sesión: redirección a `/login` | **PASÓ** | 200 OK / 302 Found |
+| **TC-29** | CA-06, RF-12 | Precisión de las métricas (KPIs) frente a la base de datos | 4 préstamos controlados: 1 devuelto a tiempo, 1 devuelto con retraso y daño, 1 vencido, 1 en curso al día | GET `/api/v1/reportes/metricas?top=20` | Los conteos de total, activos, vencidos, devueltos, a tiempo, recursos no disponibles y novedades abiertas coinciden con el cálculo directo sobre la BD. Tasa de cumplimiento = devueltos a tiempo / devueltos. Rankings correctos | **PASÓ** | 200 OK |
+| **TC-30** | CA-06, RF-12 | Filtros de la consulta consolidada por estado, solicitante y categoría | Préstamos de la prueba TC-29 | GET `/api/v1/reportes/consolidado` con `estado` (`vencido`, `en_curso`, `devuelto`), `solicitante`, `categoria` y `limit` | Cada filtro devuelve solo los préstamos esperados. `total_registros` no depende de `limit` | **PASÓ** | 200 OK |
+| **TC-31** | CA-06, RF-12 | Filtros por rango de fechas y validación de parámetros | Préstamos de la prueba TC-29 | GET `/api/v1/reportes/consolidado` con `fecha_desde`, `fecha_hasta`, rango invertido y `estado` inexistente | Rangos válidos devuelven los registros esperados y un rango futuro devuelve 0. Rango invertido o estado inexistente: HTTP 422 | **PASÓ** | 200 OK / 422 Unprocessable |
+| **TC-32** | CA-06, RF-12, RN-06 | Trazabilidad, morosidad y novedades en el consolidado | Préstamos de la prueba TC-29 | GET `/api/v1/reportes/consolidado?solicitante=...` | Cada préstamo muestra quién dio el aval docente, quién aprobó, entregó y recibió. El vencido muestra su mora (horas), el devuelto tarde muestra su retraso y el devuelto a tiempo no muestra retraso. Las novedades y la condición de los recursos aparecen correctamente | **PASÓ** | 200 OK |
+| **TC-33** | CA-06, RF-12 | Resumen de trazabilidad y auditoría | Eventos de auditoría `ENTREGA_PRESTAMO` y `DEVOLUCION_PRESTAMO` registrados | GET `/api/v1/reportes/auditoria?limite=10` | Retorna el total de eventos, el conteo por acción (la suma coincide con el total) y los últimos eventos con su usuario | **PASÓ** | 200 OK |
 
