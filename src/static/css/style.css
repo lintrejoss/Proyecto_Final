@@ -1182,3 +1182,247 @@ h4 { font-size: 1.15rem; }
     text-align: center;
   }
 }
+
+
+/* ==========================================================================
+   COMPONENTES Y UTILIDADES USADOS POR: Entregas y Devoluciones,
+   Novedades e Inhabilitaciones y Mis Préstamos
+   (clases que las plantillas usaban pero no estaban definidas)
+   ========================================================================== */
+
+/* --- Encabezado de página --- */
+.header-section {
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid var(--sy-border);
+}
+
+.page-title {
+  font-family: var(--font-serif);
+  font-size: 2.35rem;
+  line-height: 1.25;
+  font-weight: 500;
+  color: var(--sy-black);
+  margin-bottom: 0.35rem;
+}
+
+/* --- Tarjetas --- */
+.card {
+  background: var(--sy-surface);
+  border: 1px solid var(--sy-border);
+  border-top: 3px solid var(--sy-gold);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.bg-card {
+  background: var(--sy-surface);
+}
+
+.bg-card-accent {
+  background: var(--sy-cream-soft);
+  border: 1px solid var(--sy-border-light);
+}
+
+.border {
+  border: 1px solid var(--sy-border);
+}
+
+.border-subtle {
+  border-color: var(--sy-border-light);
+}
+
+.rounded {
+  border-radius: var(--radius-sm);
+}
+
+/* --- Badges (base + variantes) --- */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  line-height: 1.4;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.badge-gold {
+  background: var(--sy-gold-subtle);
+  color: var(--sy-gold-dark);
+  border-color: var(--sy-gold-border);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.badge-outline {
+  background: transparent;
+  color: var(--sy-text-muted);
+  border-color: var(--sy-border);
+}
+
+.badge-count {
+  display: inline-block;
+  min-width: 1.5rem;
+  padding: 0.05rem 0.5rem;
+  margin-left: 0.4rem;
+  border-radius: 999px;
+  background: var(--sy-gold-subtle);
+  color: var(--sy-gold-dark);
+  border: 1px solid var(--sy-gold-border);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* --- Botón dorado --- */
+.btn-gold {
+  background-color: var(--sy-gold);
+  color: var(--sy-black);
+  border-color: var(--sy-gold);
+}
+
+.btn-gold:hover {
+  background-color: var(--sy-gold-bright);
+  box-shadow: 0 4px 15px rgba(197, 168, 128, 0.3);
+}
+
+.btn-gold:disabled,
+.btn-primary:disabled,
+.btn-outline:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* --- Tabla editorial --- */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table-editorial {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.table-editorial thead th {
+  background: var(--sy-black);
+  color: var(--sy-gold);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  white-space: nowrap;
+}
+
+.table-editorial tbody td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--sy-border-light);
+  vertical-align: top;
+}
+
+.table-editorial tbody tr:hover {
+  background: var(--sy-cream);
+}
+
+/* --- Pestañas --- */
+.tabs-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--sy-border);
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  padding: 0.85rem 1.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: var(--sy-text-muted);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.tab-btn:hover {
+  color: var(--sy-black);
+}
+
+.tab-btn.active {
+  color: var(--sy-black);
+  border-bottom-color: var(--sy-gold);
+}
+
+/* --- Modales (variante .modal-card de estas pantallas) --- */
+.modal-card {
+  background: var(--sy-surface);
+  border-radius: var(--radius-sm);
+  max-width: 620px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-dark);
+  border: 1px solid var(--sy-border);
+  position: relative;
+}
+
+.modal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--sy-black), var(--sy-gold), var(--sy-black));
+}
+
+.modal-card.modal-lg {
+  max-width: 860px;
+}
+
+.modal-card .modal-footer {
+  margin-top: 0;
+  padding: 1rem 1.6rem 1.6rem;
+  border-top: 1px solid var(--sy-border-light);
+}
+
+.input-desc-novedad {
+  margin-top: 0.5rem;
+}
+
+/* --- Utilidades de espaciado, tipografía y layout --- */
+.p-3 { padding: 1.25rem; }
+.p-4 { padding: 1.75rem; }
+.py-3 { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+.mb-4 { margin-bottom: 1.75rem; }
+.mr-1 { margin-right: 0.35rem; }
+.ml-2 { margin-left: 0.65rem; }
+.gap-3 { gap: 1.25rem; }
+.flex-wrap { flex-wrap: wrap; }
+.justify-content-between { justify-content: space-between; }
+.font-bold { font-weight: 700; }
+.cursor-pointer { cursor: pointer; }
+.text-sm { font-size: 0.86rem; }
+.text-xs { font-size: 0.76rem; }
+
+/* --- Otras clases sin definir en Solicitudes / Catálogo --- */
+.solicitud-body {
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--sy-border-light);
+  margin-top: 0.85rem;
+}
+
+.cart-summary-box {
+  display: flex;
+  align-items: center;
+}
