@@ -38,7 +38,7 @@
 </div>
 
 <div id="empty-state" class="empty-state" style="display: none;">
-  <p>📭 No tienes solicitudes registradas en este estado.</p>
+  <p>No tienes solicitudes registradas en este estado.</p>
   <a href="/catalogo" class="btn btn-outline btn-sm mt-2">Ir al Catálogo de Recursos</a>
 </div>
 
@@ -47,7 +47,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3>Cancelar Solicitud #<span id="cancel-solicitud-id"></span></h3>
-      <button type="button" class="modal-close" onclick="cerrarModalCancelar()">✕</button>
+      <button type="button" class="modal-close" onclick="cerrarModalCancelar()">&times;</button>
     </div>
     <div class="modal-body">
       <div id="modal-cancel-alert"></div>
@@ -132,10 +132,10 @@ function renderizarSolicitudes(solicitudes) {
 
     let detalleEvaluacion = '';
     if (s.docente_evaluo) {
-      detalleEvaluacion += `<p class="small text-muted mb-1">👨‍🏫 <strong>Visto Bueno Docente:</strong> ${s.docente_evaluo.nombre_completo} (${formatBogotaDate(s.fecha_evaluacion_docente)})</p>`;
+      detalleEvaluacion += `<p class="small text-muted mb-1"><strong>Visto Bueno Docente:</strong> ${s.docente_evaluo.nombre_completo} (${formatBogotaDate(s.fecha_evaluacion_docente)})</p>`;
     }
     if (s.responsable_evaluo) {
-      detalleEvaluacion += `<p class="small text-muted mb-1">🛡️ <strong>Evaluación Responsable:</strong> ${s.responsable_evaluo.nombre_completo} (${formatBogotaDate(s.fecha_evaluacion_responsable)})</p>`;
+      detalleEvaluacion += `<p class="small text-muted mb-1"><strong>Evaluación Responsable:</strong> ${s.responsable_evaluo.nombre_completo} (${formatBogotaDate(s.fecha_evaluacion_responsable)})</p>`;
     }
     if (s.motivo_rechazo) {
       detalleEvaluacion += `<p class="text-danger small mb-1"><strong>Motivo de Rechazo:</strong> ${s.motivo_rechazo}</p>`;
@@ -156,7 +156,7 @@ function renderizarSolicitudes(solicitudes) {
       <div class="solicitud-body">
         <div class="mb-2">
           <strong>Período Solicitado:</strong> 
-          <span class="fecha-rango">📅 ${formatBogotaDate(s.fecha_inicio)} &nbsp;➔&nbsp; ${formatBogotaDate(s.fecha_fin)}</span>
+          <span class="fecha-rango">${formatBogotaDate(s.fecha_inicio)} &nbsp;&rarr;&nbsp; ${formatBogotaDate(s.fecha_fin)}</span>
         </div>
         <div class="mb-2">
           <strong>Recursos (${s.recursos.length}):</strong>
@@ -172,7 +172,7 @@ function renderizarSolicitudes(solicitudes) {
       <div class="solicitud-footer">
         ${puedeCancelar ? `
           <button type="button" class="btn btn-outline btn-sm text-danger" onclick="abrirModalCancelar(${s.id})">
-            ✕ Cancelar Solicitud
+            Cancelar Solicitud
           </button>
         ` : `<span></span>`}
       </div>

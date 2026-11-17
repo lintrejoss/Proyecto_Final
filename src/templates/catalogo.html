@@ -12,7 +12,7 @@
   {% if user.rol.value in ['estudiante', 'docente'] %}
   <div class="cart-summary-box">
     <button type="button" class="btn btn-primary" onclick="abrirModalSolicitud()">
-      <span>📋 Recursos Seleccionados (<span id="cart-count">0</span>)</span>
+      <span>Recursos Seleccionados (<span id="cart-count">0</span>)</span>
     </button>
   </div>
   {% endif %}
@@ -62,7 +62,7 @@
 </div>
 
 <div id="empty-state" class="empty-state" style="display: none;">
-  <p>🔍 No se encontraron recursos que coincidan con los criterios de búsqueda.</p>
+  <p>No se encontraron recursos que coincidan con los criterios de búsqueda.</p>
 </div>
 
 <!-- MODAL PARA RADICAR SOLICITUD -->
@@ -70,7 +70,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3>Radicar Solicitud de Préstamo</h3>
-      <button type="button" class="modal-close" onclick="cerrarModalSolicitud()">✕</button>
+      <button type="button" class="modal-close" onclick="cerrarModalSolicitud()">&times;</button>
     </div>
     
     <div class="modal-body">
@@ -190,10 +190,10 @@ function renderizarGrid(recursos) {
       if (r.prestado_actualmente) {
         badgeDisponibilidad = '<span class="status-badge badge-warning">Prestado ahora (Libre en tus fechas)</span>';
       } else {
-        badgeDisponibilidad = '<span class="status-badge badge-success">✓ Disponible en tus fechas</span>';
+        badgeDisponibilidad = '<span class="status-badge badge-success">Disponible en tus fechas</span>';
       }
     } else {
-      badgeDisponibilidad = `<span class="status-badge badge-danger">✕ No disponible</span>`;
+      badgeDisponibilidad = `<span class="status-badge badge-danger">No disponible</span>`;
     }
 
     const estaSeleccionado = seleccionados.has(r.id);
@@ -265,7 +265,7 @@ function abrirModalSolicitud() {
       const li = document.createElement('li');
       li.innerHTML = `
         <span><strong>[${r.codigo}]</strong> ${r.nombre} (${r.categoria})</span>
-        <button type="button" class="btn-remove" onclick="toggleSeleccion(${r.id}); abrirModalSolicitud();">✕</button>
+        <button type="button" class="btn-remove" onclick="toggleSeleccion(${r.id}); abrirModalSolicitud();">&times;</button>
       `;
       list.appendChild(li);
     }

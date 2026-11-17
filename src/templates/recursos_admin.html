@@ -14,7 +14,7 @@
     </div>
     <div class="d-flex gap-2">
       <button class="btn btn-gold btn-sm" onclick="abrirModalCrear()">+ Nuevo Recurso</button>
-      <button class="btn btn-outline btn-sm" onclick="cargarRecursos()">🔄 Actualizar</button>
+      <button class="btn btn-outline btn-sm" onclick="cargarRecursos()">Actualizar</button>
     </div>
   </div>
 </div>
@@ -72,7 +72,7 @@
   <div class="modal-card">
     <div class="modal-header">
       <h3>Alta de Nuevo Recurso</h3>
-      <button class="modal-close" onclick="cerrarModalCrear()">✕</button>
+      <button class="modal-close" onclick="cerrarModalCrear()">&times;</button>
     </div>
     <div class="modal-body">
       <form id="form-crear-recurso" onsubmit="guardarNuevoRecurso(event)">
@@ -139,7 +139,7 @@
   <div class="modal-card">
     <div class="modal-header">
       <h3>Editar Recurso & Condición</h3>
-      <button class="modal-close" onclick="cerrarModalEditar()">✕</button>
+      <button class="modal-close" onclick="cerrarModalEditar()">&times;</button>
     </div>
     <div class="modal-body">
       <form id="form-editar-recurso" onsubmit="guardarEdicionRecurso(event)">
@@ -239,11 +239,11 @@ function renderizarFilas(lista) {
   tbody.innerHTML = '';
 
   lista.forEach(r => {
-    let badgeCond = '<span class="badge badge-success">✓ Habilitado</span>';
+    let badgeCond = '<span class="badge badge-success">Habilitado</span>';
     if (r.condicion === 'no_disponible') {
-      badgeCond = '<span class="badge badge-warning">⚠️ No Disponible</span>';
+      badgeCond = '<span class="badge badge-warning">No Disponible</span>';
     } else if (r.condicion === 'dado_de_baja') {
-      badgeCond = '<span class="badge badge-danger">✕ Dado de Baja</span>';
+      badgeCond = '<span class="badge badge-danger">Dado de Baja</span>';
     }
 
     const tr = document.createElement('tr');
@@ -259,7 +259,7 @@ function renderizarFilas(lista) {
       <td>${badgeCond}</td>
       <td>
         <button class="btn btn-outline btn-sm" onclick='abrirModalEditar(${JSON.stringify(r)})'>
-          ✏️ Editar
+          Editar
         </button>
       </td>
     `;

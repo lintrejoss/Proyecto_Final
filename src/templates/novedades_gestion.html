@@ -13,7 +13,7 @@
       </p>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline btn-sm" onclick="cargarNovedades()">🔄 Actualizar</button>
+      <button class="btn btn-outline btn-sm" onclick="cargarNovedades()">Actualizar</button>
     </div>
   </div>
 </div>
@@ -62,7 +62,7 @@
   <div class="modal-card">
     <div class="modal-header">
       <h3>Resolver Novedad & Rehabilitar</h3>
-      <button class="modal-close" onclick="cerrarModalResolver()">✕</button>
+      <button class="modal-close" onclick="cerrarModalResolver()">&times;</button>
     </div>
     <div class="modal-body">
       <div id="modal-resolver-info" class="p-3 bg-card-accent mb-3 rounded"></div>
@@ -114,13 +114,13 @@ async function cargarNovedades() {
 
     novedades.forEach(n => {
       let badgeTipo = '<span class="badge badge-warning">Observación</span>';
-      if (n.tipo === 'dano') badgeTipo = '<span class="badge badge-danger">💥 Daño</span>';
-      if (n.tipo === 'faltante') badgeTipo = '<span class="badge badge-danger">❌ Faltante</span>';
-      if (n.tipo === 'retraso') badgeTipo = '<span class="badge badge-warning">⏰ Retraso</span>';
+      if (n.tipo === 'dano') badgeTipo = '<span class="badge badge-danger">Daño</span>';
+      if (n.tipo === 'faltante') badgeTipo = '<span class="badge badge-danger">Faltante</span>';
+      if (n.tipo === 'retraso') badgeTipo = '<span class="badge badge-warning">Retraso</span>';
 
       let badgeEstado = n.resuelta
-        ? '<span class="badge badge-success">✓ Resuelta</span>'
-        : '<span class="badge badge-danger">⚠️ Abierta (Inhabilitado)</span>';
+        ? '<span class="badge badge-success">Resuelta</span>'
+        : '<span class="badge badge-danger">Abierta (Inhabilitado)</span>';
 
       let colResolucion = '<span class="text-xs text-muted">Pendiente</span>';
       if (n.resuelta) {
@@ -150,7 +150,7 @@ async function cargarNovedades() {
         <td>
           ${!n.resuelta ? `
             <button class="btn btn-gold btn-sm" onclick='abrirModalResolver(${JSON.stringify(n)})'>
-              🛠️ Resolver
+              Resolver
             </button>
           ` : '<span class="text-xs text-muted">Sin acciones</span>'}
         </td>
