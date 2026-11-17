@@ -186,3 +186,89 @@ curl -X GET "http://localhost:8000/api/v1/reportes/metricas" \
   ]
 }
 ```
+
+##  8. Solicitud con datos inválidos
+
+```bash
+curl -X 'GET' \ 'http://127.0.0.1:8000/api/v1/recursos/999' \-H 'accept: */*'
+```
+
+**Respuesta  (404 Error: Not Found)**
+ ```json
+ {
+  "detail": "Recurso no encontrado"
+}
+```
+
+## 9. solicitud con datos invalidos
+
+
+```bash
+curl -X 'POST' \
+  'http://127.0.0.1:8000/api/v1/solicitudes' \
+  -H 'accept: */*' \
+  ```
+**Respuesta  (422	Error: Unprocessable Entity)**
+```json
+ {
+  "detail": "La fecha de inicio debe ser estrictamente anterior a la fecha de finalización."
+}
+
+```
+
+## 10. Operación por usuario no autorizado
+## estudiante intenta aprobar una solicitud de prestamo 
+```bash
+curl -X 'POST' \
+  'http://127.0.0.1:8000/api/v1/solicitudes/24/evaluar-docente' \
+  -H 'accept: */*' \
+  ```
+
+  **Respuesta  (403	Error: Forbidden)**
+```json
+ {
+  "detail": "La fecha de inicio debe ser estrictamente anterior a la fecha de finalización."
+}
+
+```
+
+## 11. Consulta del préstamo activo
+```bash
+curl -X 'GET' \
+  'http://127.0.0.1:8000/api/v1/prestamos?solo_activos=true&solo_vencidos=false' \
+  -H 'accept: */*' \
+ ```
+
+  **Respuesta  (HTTP 200 OK)**
+```json
+  [
+  {
+    "id": 12,
+    "solicitud_id": 24,
+    "solicitante_id": 2,
+    "solicitante_nombre": "Ronald Cardona",
+    "solicitante_email": "estudiante2@universidad.edu.co",
+    "solicitante_documento": "EST-2026-002",
+    "responsable_entrega_nombre": "Marta Gómez (Laboratorio)",
+    "fecha_entrega_real": "2026-11-17T11:28:05.063932-05:00",
+    "observaciones_entrega": null,
+    "responsable_recepcion_nombre": null,
+    "fecha_devolucion_real": null,
+    "observaciones_devolucion": null,
+    "estado": "en_curso",
+    "fecha_inicio_prevista": "2026-11-17T12:19:00-05:00",
+    "fecha_fin_prevista": "2026-11-17T16:19:00-05:00",
+    "es_vencido": false,
+    "recursos": [
+      {
+        "id": 9,
+        "codigo": "TEST-E4-A",
+        "nombre": "Multímetro Test Etapa 4",
+        "categoria": "herramienta",
+        "condicion": "habilitado"
+      }
+    ]
+  }
+]
+
+```
