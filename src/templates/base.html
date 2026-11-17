@@ -39,10 +39,12 @@
             <a href="/responsable/bandeja" class="nav-item">Aprobaciones FIFO</a>
             <a href="/responsable/prestamos" class="nav-item">Entregas & Préstamos</a>
             <a href="/responsable/novedades" class="nav-item">Novedades</a>
+            <a href="/recursos/admin" class="nav-item">Inventario</a>
           {% endif %}
           {% if user.rol.value == 'coordinacion' %}
             <a href="/responsable/prestamos" class="nav-item">Préstamos & Vencidos</a>
             <a href="/responsable/novedades" class="nav-item">Novedades</a>
+            <a href="/recursos/admin" class="nav-item">Inventario</a>
           {% endif %}
 
           {% if user.rol.value in ['coordinacion', 'responsable'] %}

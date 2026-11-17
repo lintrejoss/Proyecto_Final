@@ -3,34 +3,35 @@ platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /Users/lin/proyec
 cachedir: .pytest_cache
 rootdir: /Users/lin/proyecto final
 plugins: anyio-4.12.1
-collecting ... collected 30 items
+collecting ... collected 31 items
 
 tests/test_etapa1_auth.py::test_health_endpoint PASSED                   [  3%]
 tests/test_etapa1_auth.py::test_argon2_hashing PASSED                    [  6%]
-tests/test_etapa1_auth.py::test_login_exitoso_todos_los_roles PASSED     [ 10%]
-tests/test_etapa1_auth.py::test_login_credenciales_invalidas PASSED      [ 13%]
+tests/test_etapa1_auth.py::test_login_exitoso_todos_los_roles PASSED     [  9%]
+tests/test_etapa1_auth.py::test_login_credenciales_invalidas PASSED      [ 12%]
 tests/test_etapa1_auth.py::test_me_con_token_valido PASSED               [ 16%]
-tests/test_etapa1_auth.py::test_me_sin_token_rechazado PASSED            [ 20%]
-tests/test_etapa1_auth.py::test_vistas_web_login_y_redireccion PASSED    [ 23%]
-tests/test_etapa2_recursos_solicitudes.py::test_catalogo_recursos PASSED [ 26%]
-tests/test_etapa2_recursos_solicitudes.py::test_creacion_solicitud_estudiante PASSED [ 30%]
-tests/test_etapa2_recursos_solicitudes.py::test_creacion_solicitud_docente_directa PASSED [ 33%]
-tests/test_etapa2_recursos_solicitudes.py::test_validaciones_de_fecha PASSED [ 36%]
-tests/test_etapa2_recursos_solicitudes.py::test_cancelacion_solicitud PASSED [ 40%]
-tests/test_etapa2_recursos_solicitudes.py::test_bloqueo_por_inhabilitacion PASSED [ 43%]
-tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_visto_bueno_docente PASSED [ 46%]
-tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_rechazo_docente_con_motivo PASSED [ 50%]
-tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_aprobacion_responsable_crea_reserva PASSED [ 53%]
-tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_regla_fifo_estricta PASSED [ 56%]
-tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_bloqueo_por_condicion_no_disponible PASSED [ 60%]
-tests/test_etapa4_prestamos_novedades.py::test_entrega_fisica_exitosa PASSED [ 63%]
-tests/test_etapa4_prestamos_novedades.py::test_bloqueo_entrega_por_prestamo_vencido_rn06 PASSED [ 66%]
+tests/test_etapa1_auth.py::test_me_sin_token_rechazado PASSED            [ 19%]
+tests/test_etapa1_auth.py::test_vistas_web_login_y_redireccion PASSED    [ 22%]
+tests/test_etapa2_recursos_solicitudes.py::test_catalogo_recursos PASSED [ 25%]
+tests/test_etapa2_recursos_solicitudes.py::test_creacion_solicitud_estudiante PASSED [ 29%]
+tests/test_etapa2_recursos_solicitudes.py::test_creacion_solicitud_docente_directa PASSED [ 32%]
+tests/test_etapa2_recursos_solicitudes.py::test_validaciones_de_fecha PASSED [ 35%]
+tests/test_etapa2_recursos_solicitudes.py::test_cancelacion_solicitud PASSED [ 38%]
+tests/test_etapa2_recursos_solicitudes.py::test_bloqueo_por_inhabilitacion PASSED [ 41%]
+tests/test_etapa2_recursos_solicitudes.py::test_recursos_admin_crud_y_rbac PASSED [ 45%]
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_visto_bueno_docente PASSED [ 48%]
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_rechazo_docente_con_motivo PASSED [ 51%]
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_aprobacion_responsable_crea_reserva PASSED [ 54%]
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_regla_fifo_estricta PASSED [ 58%]
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_bloqueo_por_condicion_no_disponible PASSED [ 61%]
+tests/test_etapa4_prestamos_novedades.py::test_entrega_fisica_exitosa PASSED [ 64%]
+tests/test_etapa4_prestamos_novedades.py::test_bloqueo_entrega_por_prestamo_vencido_rn06 PASSED [ 67%]
 tests/test_etapa4_prestamos_novedades.py::test_devolucion_exitosa_sin_novedades PASSED [ 70%]
-tests/test_etapa4_prestamos_novedades.py::test_devolucion_con_dano_e_inhabilitacion_rn07 PASSED [ 73%]
-tests/test_etapa4_prestamos_novedades.py::test_resolucion_novedad_y_rehabilitacion_rn08 PASSED [ 76%]
+tests/test_etapa4_prestamos_novedades.py::test_devolucion_con_dano_e_inhabilitacion_rn07 PASSED [ 74%]
+tests/test_etapa4_prestamos_novedades.py::test_resolucion_novedad_y_rehabilitacion_rn08 PASSED [ 77%]
 tests/test_etapa5_reportes_coordinacion.py::test_rbac_reportes_solo_coordinacion_y_responsable PASSED [ 80%]
 tests/test_etapa5_reportes_coordinacion.py::test_vista_web_reportes_restringida_por_rol PASSED [ 83%]
-tests/test_etapa5_reportes_coordinacion.py::test_metricas_coinciden_con_base_de_datos PASSED [ 86%]
+tests/test_etapa5_reportes_coordinacion.py::test_metricas_coinciden_con_base_de_datos PASSED [ 87%]
 tests/test_etapa5_reportes_coordinacion.py::test_consolidado_filtros_por_estado_solicitante_y_categoria PASSED [ 90%]
 tests/test_etapa5_reportes_coordinacion.py::test_consolidado_filtros_por_rango_de_fechas PASSED [ 93%]
 tests/test_etapa5_reportes_coordinacion.py::test_consolidado_trazabilidad_morosidad_y_novedades PASSED [ 96%]
@@ -92,6 +93,10 @@ tests/test_etapa2_recursos_solicitudes.py::test_validaciones_de_fecha
   /Users/lin/proyecto final/src/routers/solicitudes_router.py:61: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
     return crear_solicitud(db, current_user, datos)
 
+tests/test_etapa2_recursos_solicitudes.py::test_recursos_admin_crud_y_rbac
+  /Users/lin/proyecto final/.venv/lib/python3.9/site-packages/starlette/testclient.py:451: DeprecationWarning: Setting per-request cookies=<...> is being deprecated, because the expected behaviour on cookie persistence is ambiguous. Set cookies directly on the client instance instead.
+    return super().request(
+
 tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_rechazo_docente_con_motivo
   /Users/lin/proyecto final/src/routers/solicitudes_router.py:125: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
     return evaluar_docente(
@@ -109,4 +114,4 @@ tests/test_etapa5_reportes_coordinacion.py::test_consolidado_filtros_por_rango_d
     result = context.run(func, *args)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-======================= 30 passed, 16 warnings in 8.34s ========================
+======================= 31 passed, 17 warnings in 6.29s ========================
