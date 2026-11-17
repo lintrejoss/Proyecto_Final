@@ -81,7 +81,8 @@ La aplicación estará disponible en:
 
 | Rol | Correo Electrónico | Contraseña | Nombre | Documento |
 | :--- | :--- | :--- | :--- | :--- |
-| **Estudiante** | `estudiante@universidad.edu.co` | `Estudiante123!` | Laura Méndez | `EST-2026-001` |
+| **Estudiante 1** | `estudiante@universidad.edu.co` | `Estudiante123!` | Paulina Trejos | `EST-2026-001` |
+| **Estudiante 2** | `estudiante2@universidad.edu.co` | `Estudiante2123!` | Ronald Cardona | `EST-2026-002` |
 | **Docente** | `docente@universidad.edu.co` | `Docente123!` | Prof. Carlos Ruiz | `DOC-1082-993` |
 | **Responsable** | `responsable@universidad.edu.co` | `Responsable123!` | Marta Gómez (Lab) | `LAB-0045-812` |
 | **Coordinación** | `coordinacion@universidad.edu.co` | `Coordinacion123!` | Dr. Fernando Ospina | `CRD-0012-745` |
@@ -90,16 +91,29 @@ La aplicación estará disponible en:
 
 ---
 
-## 4. Ejecución de Pruebas Unitarias y Funcionales
+## 4. Ejecución de la Suite Completa de Pruebas
 
-Ejecutar la suite de pruebas automatizadas:
+Ejecutar las 30 pruebas automatizadas que cubren las 5 etapas del ciclo de vida:
 ```bash
-python3 tests/test_etapa1_auth.py
+pytest tests/ -v
 ```
 
 ---
 
-## 5. Estructura de Documentación
+## 5. Ramas de Git por Etapas del Proyecto
+
+Para facilitar la evaluación y cumplir con la trazabilidad del desarrollo, el repositorio cuenta con ramas independientes por cada etapa/requisito:
+
+1. `etapa-1-autenticacion`: Autenticación JWT Bearer, Argon2id, RBAC, modelos base y migraciones Alembic.
+2. `etapa-2-catalogo-solicitudes`: Catálogo, cálculo temporal `[inicio, fin)`, solicitudes y cancelación.
+3. `etapa-3-evaluacion-fifo`: Aval docente, aprobación de responsable, regla FIFO y concurrencia pesimista `FOR UPDATE`.
+4. `etapa-4-prestamos-novedades`: Entrega física, bloqueo por vencidos (RN-06), devolución, novedades (RN-07) y rehabilitación (RN-08).
+5. `etapa-5-reportes-coordinacion`: Consulta consolidada, KPIs en tiempo real, filtros y trazabilidad institucional (CA-06 / RF-12).
+6. `main`: Rama principal con todas las etapas integradas y verificadas.
+
+---
+
+## 6. Estructura de Documentación
 
 - [`docs/requisitos.md`](docs/requisitos.md): Requisitos funcionales, no funcionales y reglas de negocio explícitas con fuente.
 - [`docs/diseno.md`](docs/diseno.md): Diagramas de componentes, modelo relacional, máquinas de estado y concurrencia.
