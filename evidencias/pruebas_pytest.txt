@@ -1,0 +1,112 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /Users/lin/proyecto final/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/lin/proyecto final
+plugins: anyio-4.12.1
+collecting ... collected 30 items
+
+tests/test_etapa1_auth.py::test_health_endpoint PASSED                   [  3%]
+tests/test_etapa1_auth.py::test_argon2_hashing PASSED                    [  6%]
+tests/test_etapa1_auth.py::test_login_exitoso_todos_los_roles PASSED     [ 10%]
+tests/test_etapa1_auth.py::test_login_credenciales_invalidas PASSED      [ 13%]
+tests/test_etapa1_auth.py::test_me_con_token_valido PASSED               [ 16%]
+tests/test_etapa1_auth.py::test_me_sin_token_rechazado PASSED            [ 20%]
+tests/test_etapa1_auth.py::test_vistas_web_login_y_redireccion PASSED    [ 23%]
+tests/test_etapa2_recursos_solicitudes.py::test_catalogo_recursos PASSED [ 26%]
+tests/test_etapa2_recursos_solicitudes.py::test_creacion_solicitud_estudiante PASSED [ 30%]
+tests/test_etapa2_recursos_solicitudes.py::test_creacion_solicitud_docente_directa PASSED [ 33%]
+tests/test_etapa2_recursos_solicitudes.py::test_validaciones_de_fecha PASSED [ 36%]
+tests/test_etapa2_recursos_solicitudes.py::test_cancelacion_solicitud PASSED [ 40%]
+tests/test_etapa2_recursos_solicitudes.py::test_bloqueo_por_inhabilitacion PASSED [ 43%]
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_visto_bueno_docente PASSED [ 46%]
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_rechazo_docente_con_motivo PASSED [ 50%]
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_aprobacion_responsable_crea_reserva PASSED [ 53%]
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_regla_fifo_estricta PASSED [ 56%]
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_bloqueo_por_condicion_no_disponible PASSED [ 60%]
+tests/test_etapa4_prestamos_novedades.py::test_entrega_fisica_exitosa PASSED [ 63%]
+tests/test_etapa4_prestamos_novedades.py::test_bloqueo_entrega_por_prestamo_vencido_rn06 PASSED [ 66%]
+tests/test_etapa4_prestamos_novedades.py::test_devolucion_exitosa_sin_novedades PASSED [ 70%]
+tests/test_etapa4_prestamos_novedades.py::test_devolucion_con_dano_e_inhabilitacion_rn07 PASSED [ 73%]
+tests/test_etapa4_prestamos_novedades.py::test_resolucion_novedad_y_rehabilitacion_rn08 PASSED [ 76%]
+tests/test_etapa5_reportes_coordinacion.py::test_rbac_reportes_solo_coordinacion_y_responsable PASSED [ 80%]
+tests/test_etapa5_reportes_coordinacion.py::test_vista_web_reportes_restringida_por_rol PASSED [ 83%]
+tests/test_etapa5_reportes_coordinacion.py::test_metricas_coinciden_con_base_de_datos PASSED [ 86%]
+tests/test_etapa5_reportes_coordinacion.py::test_consolidado_filtros_por_estado_solicitante_y_categoria PASSED [ 90%]
+tests/test_etapa5_reportes_coordinacion.py::test_consolidado_filtros_por_rango_de_fechas PASSED [ 93%]
+tests/test_etapa5_reportes_coordinacion.py::test_consolidado_trazabilidad_morosidad_y_novedades PASSED [ 96%]
+tests/test_etapa5_reportes_coordinacion.py::test_resumen_auditoria PASSED [100%]
+
+=============================== warnings summary ===============================
+src/schemas/auth.py:16
+  /Users/lin/proyecto final/src/schemas/auth.py:16: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class UsuarioSummary(BaseModel):
+
+src/schemas/recurso.py:8
+  /Users/lin/proyecto final/src/schemas/recurso.py:8: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    codigo: str = Field(..., max_length=50, example="HER-005")
+
+src/schemas/recurso.py:9
+  /Users/lin/proyecto final/src/schemas/recurso.py:9: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    nombre: str = Field(..., max_length=200, example="Multímetro Digital")
+
+src/schemas/recurso.py:11
+  /Users/lin/proyecto final/src/schemas/recurso.py:11: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    marca: Optional[str] = Field(None, max_length=100, example="Fluke")
+
+src/schemas/recurso.py:12
+  /Users/lin/proyecto final/src/schemas/recurso.py:12: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    modelo: Optional[str] = Field(None, max_length=100, example="87V")
+
+src/schemas/recurso.py:13
+  /Users/lin/proyecto final/src/schemas/recurso.py:13: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    serie: Optional[str] = Field(None, max_length=100, example="FLK-9901")
+
+src/schemas/recurso.py:32
+  /Users/lin/proyecto final/src/schemas/recurso.py:32: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class RecursoOut(RecursoBase):
+
+src/schemas/solicitud.py:30
+  /Users/lin/proyecto final/src/schemas/solicitud.py:30: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class SolicitudOut(BaseModel):
+
+src/main.py:59
+  /Users/lin/proyecto final/src/main.py:59: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+.venv/lib/python3.9/site-packages/fastapi/applications.py:4579
+  /Users/lin/proyecto final/.venv/lib/python3.9/site-packages/fastapi/applications.py:4579: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+tests/test_etapa2_recursos_solicitudes.py::test_validaciones_de_fecha
+tests/test_etapa2_recursos_solicitudes.py::test_validaciones_de_fecha
+  /Users/lin/proyecto final/src/routers/solicitudes_router.py:61: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    return crear_solicitud(db, current_user, datos)
+
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_rechazo_docente_con_motivo
+  /Users/lin/proyecto final/src/routers/solicitudes_router.py:125: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    return evaluar_docente(
+
+tests/test_etapa3_evaluacion_fifo_concurrencia.py::test_regla_fifo_estricta
+  /Users/lin/proyecto final/src/routers/solicitudes_router.py:145: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    return evaluar_responsable(
+
+tests/test_etapa4_prestamos_novedades.py::test_bloqueo_entrega_por_prestamo_vencido_rn06
+  /Users/lin/proyecto final/src/routers/prestamos_router.py:67: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    return registrar_entrega_prestamo(db, responsable, datos)
+
+tests/test_etapa5_reportes_coordinacion.py::test_consolidado_filtros_por_rango_de_fechas
+  /Users/lin/proyecto final/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py:986: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    result = context.run(func, *args)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 30 passed, 16 warnings in 8.34s ========================
