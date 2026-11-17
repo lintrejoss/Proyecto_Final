@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v=2">
 </head>
 <body>
   <header class="app-header">
@@ -39,10 +39,12 @@
             <a href="/responsable/bandeja" class="nav-item">Aprobaciones FIFO</a>
             <a href="/responsable/prestamos" class="nav-item">Entregas & Préstamos</a>
             <a href="/responsable/novedades" class="nav-item">Novedades</a>
+            <a href="/recursos/admin" class="nav-item">Inventario</a>
           {% endif %}
           {% if user.rol.value == 'coordinacion' %}
             <a href="/responsable/prestamos" class="nav-item">Préstamos & Vencidos</a>
             <a href="/responsable/novedades" class="nav-item">Novedades</a>
+            <a href="/recursos/admin" class="nav-item">Inventario</a>
           {% endif %}
 
           {% if user.rol.value in ['coordinacion', 'responsable'] %}

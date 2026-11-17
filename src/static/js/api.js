@@ -11,7 +11,7 @@ function showAlert(message, type = 'info') {
   alertDiv.className = `alert alert-${type}`;
   alertDiv.innerHTML = `
     <span>${message}</span>
-    <button type="button" style="background:none;border:none;cursor:pointer;font-weight:bold;margin-left:1rem;" onclick="this.parentElement.remove()">✕</button>
+    <button type="button" style="background:none;border:none;cursor:pointer;font-weight:bold;margin-left:1rem;" onclick="this.parentElement.remove()">&times;</button>
   `;
 
   container.appendChild(alertDiv);

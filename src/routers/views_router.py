@@ -113,6 +113,16 @@ def reportes_consolidado_page(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/", status_code=302)
     return templates.TemplateResponse(request, "reportes_consolidado.html", {"user": user})
 
+
+@router.get("/recursos/admin", response_class=HTMLResponse)
+def recursos_admin_page(request: Request, db: Session = Depends(get_db)):
+    user = get_optional_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    if user.rol.value not in ["responsable", "coordinacion"]:
+        return RedirectResponse(url="/", status_code=302)
+    return templates.TemplateResponse(request, "recursos_admin.html", {"user": user})
+
 @router.get("/logout", response_class=HTMLResponse)
 def logout_view(request: Request):
     response = RedirectResponse(url="/login", status_code=302)

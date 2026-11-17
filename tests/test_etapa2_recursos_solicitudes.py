@@ -254,6 +254,64 @@ def test_bloqueo_por_inhabilitacion():
             db_clean.close()
 
 
+def test_recursos_admin_crud_y_rbac():
+    """
+    RF-10: Alta, edición y actualización de condición de recursos por parte del Responsable,
+    verificando que otros roles (estudiante) no puedan realizar estas operaciones (RBAC).
+    """
+    client = TestClient(app)
+    token_estudiante = get_auth_token("estudiante@universidad.edu.co", "Estudiante123!")
+    token_responsable = get_auth_token("responsable@universidad.edu.co", "Responsable123!")
+
+    # 1. Estudiante intenta crear recurso -> Debe fallar con 403 Forbidden
+    res_est = client.post(
+        "/api/v1/recursos",
+        json={
+            "codigo": "HER-TEST-CRUD",
+            "nombre": "Herramienta de Prueba",
+            "categoria": "herramienta",
+            "ubicacion": "Lab 1"
+        },
+        headers={"Authorization": f"Bearer {token_estudiante}"}
+    )
+    assert res_est.status_code == 403
+
+    # 2. Responsable crea recurso exitosamente -> HTTP 201
+    codigo_test = f"HER-CRUD-{int(datetime.now().timestamp())}"
+    res_resp = client.post(
+        "/api/v1/recursos",
+        json={
+            "codigo": codigo_test,
+            "nombre": "Multímetro Digital Especial",
+            "categoria": "herramienta",
+            "marca": "Fluke",
+            "modelo": "87V-MAX",
+            "ubicacion": "Mesa de Calibración",
+            "condicion": "habilitado"
+        },
+        headers={"Authorization": f"Bearer {token_responsable}"}
+    )
+    assert res_resp.status_code == 201
+    recurso_creado = res_resp.json()
+    recurso_id = recurso_creado["id"]
+    assert recurso_creado["codigo"] == codigo_test
+
+    # 3. Responsable actualiza la condición a NO_DISPONIBLE -> HTTP 200
+    res_update = client.put(
+        f"/api/v1/recursos/{recurso_id}",
+        json={"condicion": "no_disponible", "ubicacion": "Enviado a Mantenimiento"},
+        headers={"Authorization": f"Bearer {token_responsable}"}
+    )
+    assert res_update.status_code == 200
+    assert res_update.json()["condicion"] == "no_disponible"
+    assert res_update.json()["ubicacion"] == "Enviado a Mantenimiento"
+
+    # 4. Vista web /recursos/admin responde 200 para Responsable
+    res_view = client.get("/recursos/admin", cookies={"access_token": token_responsable})
+    assert res_view.status_code == 200
+    assert "Gestión de Herramientas & Equipos" in res_view.text
+
+
 if __name__ == "__main__":
     print("\n--- INICIANDO SUITE DE PRUEBAS PARA LA ETAPA 2 ---")
     test_catalogo_recursos()

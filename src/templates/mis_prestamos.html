@@ -13,7 +13,7 @@
       </p>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline btn-sm" onclick="cargarMisPrestamos()">🔄 Actualizar</button>
+      <button class="btn btn-outline btn-sm" onclick="cargarMisPrestamos()">Actualizar</button>
     </div>
   </div>
 </div>
@@ -100,7 +100,7 @@ async function cargarMisPrestamos() {
 
         let badgeEstado = '<span class="badge badge-success">En Curso</span>';
         if (p.es_vencido) {
-          badgeEstado = '<span class="badge badge-danger">⚠️ ¡VENCIDO! DEVUELVA INMEDIATAMENTE</span>';
+          badgeEstado = '<span class="badge badge-danger">VENCIDO (Devolver inmediatamente)</span>';
         }
 
         const tr = document.createElement('tr');

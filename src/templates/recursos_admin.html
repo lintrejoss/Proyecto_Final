@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Recursos — MK.books{% endblock %}
+
+{% block content %}
+<div class="header-section mb-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <span class="badge badge-gold mb-2">ADMINISTRACIÓN DE INVENTARIO</span>
+      <h1 class="page-title">Gestión de Herramientas & Equipos</h1>
+      <p class="text-muted">
+        Alta de nuevas unidades, actualización de metadatos y control de condición operativa física (habilitado, no disponible o dado de baja).
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-gold btn-sm" onclick="abrirModalCrear()">+ Nuevo Recurso</button>
+      <button class="btn btn-outline btn-sm" onclick="cargarRecursos()">Actualizar</button>
+    </div>
+  </div>
+</div>
+
+<div class="card p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div class="d-flex gap-3 flex-wrap align-items-center">
+      <div>
+        <label for="filtro-categoria" class="text-xs text-muted d-block mb-1">Categoría:</label>
+        <select id="filtro-categoria" class="form-control form-control-sm" onchange="cargarRecursos()">
+          <option value="">Todas las categorías</option>
+          <option value="herramienta">Herramientas</option>
+          <option value="equipo">Equipos</option>
+        </select>
+      </div>
+      <div>
+        <label for="filtro-condicion" class="text-xs text-muted d-block mb-1">Condición Operativa:</label>
+        <select id="filtro-condicion" class="form-control form-control-sm" onchange="cargarRecursos()">
+          <option value="">Todas las condiciones</option>
+          <option value="habilitado">Habilitado</option>
+          <option value="no_disponible">No Disponible</option>
+          <option value="dado_de_baja">Dado de Baja</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <input type="text" id="filtro-busqueda" class="form-control form-control-sm" placeholder="Buscar por código, nombre o marca..." onkeyup="filtrarTablaLocal()">
+    </div>
+  </div>
+
+  <div id="loading-recursos" class="text-center py-4 text-muted">Cargando inventario de recursos...</div>
+
+  <div class="table-responsive" id="tabla-recursos-wrapper" style="display: none;">
+    <table class="table-editorial" id="tabla-recursos">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre / Tipo</th>
+          <th>Marca & Modelo</th>
+          <th>Serie</th>
+          <th>Ubicación</th>
+          <th>Condición Operativa</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-recursos">
+        <!-- Renderizado dinámico -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL: CREAR RECURSO -->
+<div id="modal-crear" class="modal-overlay" style="display: none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Alta de Nuevo Recurso</h3>
+      <button class="modal-close" onclick="cerrarModalCrear()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-crear-recurso" onsubmit="guardarNuevoRecurso(event)">
+        <div class="row">
+          <div class="col-md-6 form-group mb-3">
+            <label for="crear-codigo">Código Interno (Único) *</label>
+            <input type="text" id="crear-codigo" class="form-control" required placeholder="Ej: HER-005 o EQP-005">
+          </div>
+          <div class="col-md-6 form-group mb-3">
+            <label for="crear-categoria">Categoría *</label>
+            <select id="crear-categoria" class="form-control" required>
+              <option value="herramienta">Herramienta</option>
+              <option value="equipo">Equipo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="crear-nombre">Nombre del Recurso *</label>
+          <input type="text" id="crear-nombre" class="form-control" required placeholder="Ej: Fuente de Poder Regulada">
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 form-group mb-3">
+            <label for="crear-marca">Marca</label>
+            <input type="text" id="crear-marca" class="form-control" placeholder="Ej: GW Instek">
+          </div>
+          <div class="col-md-6 form-group mb-3">
+            <label for="crear-modelo">Modelo</label>
+            <input type="text" id="crear-modelo" class="form-control" placeholder="Ej: GPS-3303">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 form-group mb-3">
+            <label for="crear-serie">Número de Serie</label>
+            <input type="text" id="crear-serie" class="form-control" placeholder="Ej: SN-998812">
+          </div>
+          <div class="col-md-6 form-group mb-3">
+            <label for="crear-condicion">Condición Inicial *</label>
+            <select id="crear-condicion" class="form-control" required>
+              <option value="habilitado">Habilitado</option>
+              <option value="no_disponible">No Disponible</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="crear-ubicacion">Ubicación Física en Laboratorio *</label>
+          <input type="text" id="crear-ubicacion" class="form-control" required placeholder="Ej: Mesa de Electrónica - Lab 1">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="cerrarModalCrear()">Cancelar</button>
+          <button type="submit" class="btn btn-gold" id="btn-submit-crear">Guardar Recurso</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR RECURSO -->
+<div id="modal-editar" class="modal-overlay" style="display: none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Editar Recurso & Condición</h3>
+      <button class="modal-close" onclick="cerrarModalEditar()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-editar-recurso" onsubmit="guardarEdicionRecurso(event)">
+        <input type="hidden" id="editar-id">
+
+        <div class="form-group mb-3">
+          <label>Código del Recurso:</label>
+          <input type="text" id="editar-codigo" class="form-control" disabled style="opacity: 0.7;">
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="editar-nombre">Nombre del Recurso *</label>
+          <input type="text" id="editar-nombre" class="form-control" required>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 form-group mb-3">
+            <label for="editar-marca">Marca</label>
+            <input type="text" id="editar-marca" class="form-control">
+          </div>
+          <div class="col-md-6 form-group mb-3">
+            <label for="editar-modelo">Modelo</label>
+            <input type="text" id="editar-modelo" class="form-control">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 form-group mb-3">
+            <label for="editar-serie">Número de Serie</label>
+            <input type="text" id="editar-serie" class="form-control">
+          </div>
+          <div class="col-md-6 form-group mb-3">
+            <label for="editar-condicion">Condición Operativa *</label>
+            <select id="editar-condicion" class="form-control" required>
+              <option value="habilitado">Habilitado (Disponible para préstamo)</option>
+              <option value="no_disponible">No Disponible (En mantenimiento o averiado)</option>
+              <option value="dado_de_baja">Dado de Baja (Retirado permanentemente)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="editar-ubicacion">Ubicación Física *</label>
+          <input type="text" id="editar-ubicacion" class="form-control" required>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="cerrarModalEditar()">Cancelar</button>
+          <button type="submit" class="btn btn-gold" id="btn-submit-editar">Actualizar Recurso</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+let todosLosRecursos = [];
+
+async function cargarRecursos() {
+  const loading = document.getElementById('loading-recursos');
+  const wrapper = document.getElementById('tabla-recursos-wrapper');
+  const tbody = document.getElementById('tbody-recursos');
+
+  loading.style.display = 'block';
+  wrapper.style.display = 'none';
+  tbody.innerHTML = '';
+
+  const cat = document.getElementById('filtro-categoria').value;
+  const cond = document.getElementById('filtro-condicion').value;
+
+  let url = '/api/v1/recursos?';
+  if (cat) url += `categoria=${cat}&`;
+  if (cond) url += `condicion=${cond}&`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Error al obtener catálogo de recursos");
+    todosLosRecursos = await res.json();
+
+    loading.style.display = 'none';
+
+    if (todosLosRecursos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No se encontraron recursos con los filtros seleccionados.</td></tr>`;
+      wrapper.style.display = 'block';
+      return;
+    }
+
+    renderizarFilas(todosLosRecursos);
+    wrapper.style.display = 'block';
+  } catch (err) {
+    loading.innerHTML = `<span class="text-danger">Error: ${err.message}</span>`;
+  }
+}
+
+function renderizarFilas(lista) {
+  const tbody = document.getElementById('tbody-recursos');
+  tbody.innerHTML = '';
+
+  lista.forEach(r => {
+    let badgeCond = '<span class="badge badge-success">Habilitado</span>';
+    if (r.condicion === 'no_disponible') {
+      badgeCond = '<span class="badge badge-warning">No Disponible</span>';
+    } else if (r.condicion === 'dado_de_baja') {
+      badgeCond = '<span class="badge badge-danger">Dado de Baja</span>';
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${r.codigo}</strong></td>
+      <td>
+        <strong>${r.nombre}</strong><br>
+        <span class="text-xs text-muted badge badge-outline">${r.categoria.toUpperCase()}</span>
+      </td>
+      <td><span class="text-sm">${r.marca || 'N/A'} ${r.modelo || ''}</span></td>
+      <td><span class="text-xs text-muted">${r.serie || 'S/N'}</span></td>
+      <td><span class="text-xs">${r.ubicacion}</span></td>
+      <td>${badgeCond}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick='abrirModalEditar(${JSON.stringify(r)})'>
+          Editar
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filtrarTablaLocal() {
+  const query = document.getElementById('filtro-busqueda').value.toLowerCase().trim();
+  if (!query) {
+    renderizarFilas(todosLosRecursos);
+    return;
+  }
+  const filtrados = todosLosRecursos.filter(r => 
+    r.codigo.toLowerCase().includes(query) ||
+    r.nombre.toLowerCase().includes(query) ||
+    (r.marca && r.marca.toLowerCase().includes(query)) ||
+    (r.modelo && r.modelo.toLowerCase().includes(query))
+  );
+  renderizarFilas(filtrados);
+}
+
+function abrirModalCrear() {
+  document.getElementById('form-crear-recurso').reset();
+  document.getElementById('modal-crear').style.display = 'flex';
+}
+
+function cerrarModalCrear() {
+  document.getElementById('modal-crear').style.display = 'none';
+}
+
+async function guardarNuevoRecurso(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-submit-crear');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  const payload = {
+    codigo: document.getElementById('crear-codigo').value.trim().toUpperCase(),
+    categoria: document.getElementById('crear-categoria').value,
+    nombre: document.getElementById('crear-nombre').value.trim(),
+    marca: document.getElementById('crear-marca').value.trim() || null,
+    modelo: document.getElementById('crear-modelo').value.trim() || null,
+    serie: document.getElementById('crear-serie').value.trim() || null,
+    condicion: document.getElementById('crear-condicion').value,
+    ubicacion: document.getElementById('crear-ubicacion').value.trim()
+  };
+
+  try {
+    const res = await fetch('/api/v1/recursos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Error al crear recurso");
+
+    cerrarModalCrear();
+    showAlert(`Recurso [${data.codigo}] creado exitosamente.`, 'success');
+    await cargarRecursos();
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar Recurso';
+  }
+}
+
+function abrirModalEditar(recurso) {
+  document.getElementById('editar-id').value = recurso.id;
+  document.getElementById('editar-codigo').value = recurso.codigo;
+  document.getElementById('editar-nombre').value = recurso.nombre;
+  document.getElementById('editar-marca').value = recurso.marca || '';
+  document.getElementById('editar-modelo').value = recurso.modelo || '';
+  document.getElementById('editar-serie').value = recurso.serie || '';
+  document.getElementById('editar-condicion').value = recurso.condicion;
+  document.getElementById('editar-ubicacion').value = recurso.ubicacion;
+
+  document.getElementById('modal-editar').style.display = 'flex';
+}
+
+function cerrarModalEditar() {
+  document.getElementById('modal-editar').style.display = 'none';
+}
+
+async function guardarEdicionRecurso(e) {
+  e.preventDefault();
+  const id = document.getElementById('editar-id').value;
+  const btn = document.getElementById('btn-submit-editar');
+  btn.disabled = true;
+  btn.textContent = 'Actualizando...';
+
+  const payload = {
+    nombre: document.getElementById('editar-nombre').value.trim(),
+    marca: document.getElementById('editar-marca').value.trim() || null,
+    modelo: document.getElementById('editar-modelo').value.trim() || null,
+    serie: document.getElementById('editar-serie').value.trim() || null,
+    condicion: document.getElementById('editar-condicion').value,
+    ubicacion: document.getElementById('editar-ubicacion').value.trim()
+  };
+
+  try {
+    const res = await fetch(`/api/v1/recursos/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Error al actualizar recurso");
+
+    cerrarModalEditar();
+    showAlert(`Recurso [${data.codigo}] actualizado correctamente.`, 'success');
+    await cargarRecursos();
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Actualizar Recurso';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  cargarRecursos();
+});
+</script>
+{% endblock %}
